@@ -4,6 +4,9 @@
                €     € €€‹‹‹‹‹ﬂ €€       €€‹‹‹‹‹ €     €    €€
 
 AdPlay v1.0 by Simon Peter (dn.tlp@gmx.net) et al.
+- MID, CMF, LAA & SCI replayer by Phil Hassey (philhassey@hotmail.com)
+- many file format docs supplied by Death Adder (death-adder@juno.com)
+
 Website: http://adplug.sourceforge.net/dos.shtml
 
 Description:
