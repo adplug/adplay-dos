@@ -22,7 +22,7 @@
 #include "cfgparse.h"
 
 // global defines
-#define ADPLAYVERS	"AdPlay v1.0"	// AdPlay version string
+#define ADPLAYVERS	"AdPlay v1.1"	// AdPlay version string
 #define DEFSTACK		(32*1024)		// default stack size for timer-replay in k's
 #define CONFIGFILE	"adplay.ini"	// filename of default configuration file
 #define DEFCONFIG		"default"		// name of default configuration section
