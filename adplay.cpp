@@ -469,7 +469,7 @@ void reset_windows()
         unsigned int i;
 
         titlebar.erase();
-        titlebar.format(ADPLAYVERS ", Copyright (c) 2000 - 2002 Simon Peter <dn.tlp@gmx.net>\n"
+        titlebar.format(ADPLAYVERS ", Copyright (c) 2000 - 2003 Simon Peter <dn.tlp@gmx.net>\n"
                 "This is free software under the terms and conditions of the Nullsoft license.\n"
                 "Refer to the file README.TXT for more information.");
         instwnd.setcaption("No Instruments"); instwnd.erase();
