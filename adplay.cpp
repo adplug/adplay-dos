@@ -12,13 +12,13 @@
 #include <malloc.h>
 #include <direct.h>
 #include <env.h>
+#include <adplug.h>
+#include <analopl.h>
 
-#include "adplug.h"
-#include "analopl.h"
-#include "timer.h"
-#include "txtgfx.h"
-#include "window.h"
-#include "wndman.h"
+#include "timer\timer.h"
+#include "window\txtgfx.h"
+#include "window\window.h"
+#include "window\wndman.h"
 #include "cfgparse.h"
 
 // global defines

@@ -1,63 +1,33 @@
-# WATCOM C/C++ 11 makefile, by Simon Peter (dn.tlp@gmx.net)
+# AdPlay/DOS Makefile, (c) 2001 Simon Peter <dn.tlp@gmx.net>
 
-all: players.lib adplay.exe .symbolic
+CC = wcc386
+CXX = wpp386
+LD = wlink
 
-# global defines
-CC	= wcc386		# C compiler
-CPP	= wpp386		# C++ compiler
-MAKE	= wmake		# make utility
-LINK	= wlink		# link utility
-LIB	= wlib		# library utility
+CFLAGS = -oneatx -oh -ei -zp8 -5 -fpi87 -fp5 -zq
+CXXFLAGS = -oneatx -oh -oi+ -ei -zp8 -5 -fpi87 -fp5 -zq
+LDFLAGS = SYS pmodew OP ST=32k
+CPPFLAGS = -dstd= -dstring=String	# trick std::string into WATCOM's String()
 
-CCOP		= -oneatx -oh -ei -zp8 -5 -fpi87 -fp5 -zq		# C compiler options
-CPPOP		= -oneatx -oh -oi+ -ei -zp8 -5 -fpi87 -fp5 -zq	# C++ compiler options
-LINKOP	= OP ST=32k					# linker options
-DEFINES	= -dstd= -dstring=String -dADPLAY	# trick to convert std::string to WATCOM's String() class
-SYSTEM	= pmodew					# target system
+adplugdir = ..\adplug
+windowdir = window
+timerdir = timer
 
-ADPLUGPATH	= ..\adplug				# path to adplug sources
-WINDOWPATH	= window				# path to window library sources
-TIMERPATH	= timer				# path to timer library sources
+.cpp.obj:
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $[.
 
-analopl.obj: analopl.cpp analopl.h
-	$(CPP) $(CPPOP) -i=$(ADPLUGPATH) $(DEFINES) analopl.cpp
+all: adplay.exe
 
-adplug.obj: $(ADPLUGPATH)\adplug.cpp $(ADPLUGPATH)\adplug.h
-	$(CPP) $(CPPOP) -i=$(ADPLUGPATH)\players $(DEFINES) $(ADPLUGPATH)\adplug.cpp
-
-cfgparse.obj: cfgparse.cpp cfgparse.h
-	$(CPP) $(CPPOP) $(DEFINES) cfgparse.cpp
-
-adplay.exe: adplay.cpp makefile adplug.obj analopl.obj cfgparse.obj
-	$(CPP) $(CPPOP) -i=$(ADPLUGPATH) -i=$(ADPLUGPATH)\players -i=$(WINDOWPATH) -i=$(TIMERPATH) $(DEFINES) adplay.cpp
-      $(LINK) F adplay,$(WINDOWPATH)\window,$(WINDOWPATH)\wndman,$(WINDOWPATH)\txtgfx,analopl,adplug,cfgparse LIB $(TIMERPATH)\timer,players SYS $(SYSTEM) $(LINKOP)
+adplay.exe: adplay.obj cfgparse.obj
+	$(LD) F adplay,cfgparse LIB $(windowdir)\window,$(timerdir)\timer,adplug $(LDFLAGS)
 	pmwlite /C4 adplay.exe
 	pmwsetup /Q /B0 adplay.exe
 
-players.lib: .autodepend
-	$(CPP) $(CPPOP) $(DEFINES) $(ADPLUGPATH)\players\protrack.cpp
-	$(CPP) $(CPPOP) $(DEFINES) $(ADPLUGPATH)\players\a2m.cpp
-	$(CPP) $(CPPOP) $(DEFINES) $(ADPLUGPATH)\players\amd.cpp
-	$(CPP) $(CPPOP) $(DEFINES) $(ADPLUGPATH)\players\d00.cpp
-	$(CPP) $(CPPOP) $(DEFINES) $(ADPLUGPATH)\players\hsc.cpp
-	$(CPP) $(CPPOP) $(DEFINES) $(ADPLUGPATH)\players\hsp.cpp
-	$(CPP) $(CPPOP) $(DEFINES) $(ADPLUGPATH)\players\imf.cpp
-	$(CPP) $(CPPOP) $(DEFINES) $(ADPLUGPATH)\players\ksm.cpp
-	$(CPP) $(CPPOP) $(DEFINES) $(ADPLUGPATH)\players\mid.cpp
-	$(CPP) $(CPPOP) $(DEFINES) $(ADPLUGPATH)\players\mtk.cpp
-	$(CPP) $(CPPOP) $(DEFINES) $(ADPLUGPATH)\players\rad.cpp
-	$(CPP) $(CPPOP) $(DEFINES) $(ADPLUGPATH)\players\raw.cpp
-	$(CPP) $(CPPOP) $(DEFINES) $(ADPLUGPATH)\players\s3m.cpp
-	$(CPP) $(CPPOP) $(DEFINES) $(ADPLUGPATH)\players\sa2.cpp
-	$(CPP) $(CPPOP) $(DEFINES) $(ADPLUGPATH)\players\sng.cpp
-	$(CPP) $(CPPOP) $(DEFINES) $(ADPLUGPATH)\players\mkj.cpp
-	$(CPP) $(CPPOP) $(DEFINES) $(ADPLUGPATH)\players\dfm.cpp
-	$(CPP) $(CPPOP) $(DEFINES) $(ADPLUGPATH)\players\lds.cpp
-	$(CPP) $(CPPOP) $(DEFINES) $(ADPLUGPATH)\players\bam.cpp
-	$(LIB) -n -b players.lib +protrack +a2m +amd +d00 +hsc +hsp +imf +mtk +rad +raw +s3m +sa2 +mid +sng +ksm  +mkj +dfm +lds +bam
+adplay.obj: adplay.cpp
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -i=$(adplugdir) adplay.cpp
+
+cfgparse.obj: cfgparse.cpp cfgparse.h
 
 clean: .symbolic
 	del *.obj
-
-distclean: clean .symbolic
-	del players.lib
+	del adplay.exe

@@ -1,5 +1,5 @@
 Portable Textmode Window Classes + Console output library
-(c) 2000 - 2001 Simon Peter (dn.tlp@gmx.net)
+(c) 2000 - 2001 Simon Peter <dn.tlp@gmx.net>
 version 1.0
 
 Description
