@@ -13,12 +13,10 @@ AdPlay/DOS depends on the following libraries:
 Name:					Version:
 -----					--------
 AdPlug					>= 1.1
-WATCOM C/C++ 11.x Timer Library		>= 1.0
-WATCOM C/C++ Textmode Window Classes	>= 1.0
+WATCOM Timer Library                    >= 1.0
+WATCOM Textmode Window Classes          >= 1.0
 
-The AdPlug library can be fetched from http://adplug.sourceforge.net. The
-other two libraries are included with the AdPlay/DOS distribution. They can
-be found in the 'timer' and 'window' subdirectories, respectively.
+All these libraries can be fetched from http://adplug.sourceforge.net.
 
 AdPlay/DOS is configured to build with the PMODE/W DOS extender by default.
 So, when using the standard install, you need PMODE/W v1.33, additionally. It
@@ -33,17 +31,23 @@ Build Instructions
 ------------------
 Please read the file INSTALL.TXT for further build instructions.
 
-Debugging the AdPlug core library with AdPlay/DOS
--------------------------------------------------
-If you compiled the AdPlug core library with debugging support enabled,
+Debug logging the AdPlug core library with AdPlay/DOS
+-----------------------------------------------------
+If you compiled the AdPlug core library with debug logging support enabled,
 AdPlay/DOS automatically redirects the output from the default 'stderr' to a
 file called 'debug.log' in the directory, it was started from. This is to
 prevent screen cluttering, which would otherwise occur when AdPlug is logging
 directly to the console, on which AdPlay/DOS has its GUI output.
 
-Debugging AdPlay/DOS
---------------------
-There is no debugging support for AdPlay/DOS yet.
+Debug logging AdPlay/DOS
+------------------------
+To enable debug logging, add this line to your CONFIG.MIF file:
+
+CPPFLAGS += -dDEBUG
+
+This instructs all source files to generate debug logging output. The output
+goes to different logfiles by default. Please refer to the source code for
+information on the file names.
 
 --
 Simon Peter <dn.tlp@gmx.net>

@@ -42,7 +42,6 @@
 #include "helptxt.h"
 
 // global defines
-#define DEBUG                           // Define this for debug mode
 #define ADPLAYVERS      "AdPlay 1.3"    // AdPlay version string
 #define DEFSTACK        (32*1024)       // stack size for timer-replay code
 #define CONFIGFILE      "adplay.ini"    // filename of default configuration file
@@ -429,7 +428,7 @@ char *extract(char *newfn, archive *a, char *oldfn)
 {
 	char cmd[256];
 
-        dbg_printf("*** extract(\"%s\",a,\"%s\") ***\n",newfn,oldfn);
+        dbg_printf("*** extract(newfn,a,\"%s\") ***\n",oldfn);
 
         if(!tmpfn) return 0;    // No possible unique filename?
 	strcpy(cmd,"pkunzip ");
@@ -903,6 +902,7 @@ int main(int argc, char *argv[])
 	free(prgdir);
         if(tmpfn) { rmdir(tmpfn); free(tmpfn); }
 #ifdef DEBUG
+        dbg_printf("main(): clean shutdown.\n");
         fclose(f_log);
 #endif
         return 0;

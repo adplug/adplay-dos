@@ -17,15 +17,19 @@
  * 2. Altered source versions must be plainly marked as such, and must not be
  *    misrepresented as being the original software.
  * 3. This notice may not be removed or altered from any source distribution.
+ *
+ * NOTES:
+ * To enable debug logging output, compile this file with a DEBUG
+ * preprocessor define and eventually alter the DEBUG_FILE definition, below,
+ * which defines the logfile name.
  */
+
+#undef DEBUG
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
-
-// Define this for debug mode
-//#define DEBUG
 
 #ifdef DEBUG
 #define DEBUG_FILE      "debug2.log"     // File to log to

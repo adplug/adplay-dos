@@ -73,6 +73,7 @@ void archive::close()
         for(unsigned int i=0;i<files;i++) delete file[i];
         if(arcname) delete [] arcname;
         if(f) fclose(f);
+        files = 0; arcname = 0; f = 0;
 }
 
 archive *archive::detect(char *filename)

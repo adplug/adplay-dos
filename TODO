@@ -1,7 +1,4 @@
 AdPlay/DOS To Do List:
 ----------------------
-- Update Makefile to let source dist include timer and window subdirs. [dynamite]
 - Add ARJ and RAR archive reading support.
-- Write more on-line help.
-- Add more layouts.
 - Add fancy screensaver feature. [dynamite]

@@ -30,6 +30,16 @@ Building
 --------
 Please read the file INSTALL.TXT for build instructions!
 
+Debug Logging
+-------------
+The library can be compiled to produce some debug logging output. To enable
+this, add the following line to your CONFIG.MIF file:
+
+CPPFLAGS += -dDEBUG
+
+This will enable debug logging. The output file is specified with the
+DEBUG_FILE preprocessor define in the 'window.cpp' file.
+
 Legal
 -----
 This software is provided 'as-is', without any express or implied

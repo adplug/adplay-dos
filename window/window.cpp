@@ -23,8 +23,11 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "debug.h"
 #include "txtgfx.h"
 #include "window.h"
+
+#define DEBUG_FILE      "window.log"
 
 // Defaults
 #define DEFWNDSIZEX	20
@@ -43,7 +46,10 @@ static CWindow *CWindow::focus = 0;
 CWindow::CWindow(): x(DEFWNDPOSX), y(DEFWNDPOSY), curpos(0), autocolor(true),
         colmap(0), wndbuf(0), caption(0)
 {
-        if(!focus) setfocus();  // First created window? Set focus here!
+        if(!focus) {    // First created window?
+                setfocus();                     // Set focus here!
+                Window_LogFile(DEBUG_FILE);     // Start debug logging
+        }
 	setcaption("Window");
 	resize(DEFWNDSIZEX,DEFWNDSIZEY);
 }
@@ -310,11 +316,13 @@ CListWnd::CListWnd()
 {
 	autocolor = false;
         removeall();
+        Window_LogWrite("CListWnd::CListWnd(): created.\n");
 }
 
 CListWnd::~CListWnd()
 {
         removeall();
+        Window_LogWrite("CListWnd::~CListWnd(): destroyed.\n");
 }
 
 void CListWnd::additem(Item *newitem)
@@ -322,11 +330,9 @@ void CListWnd::additem(Item *newitem)
         ItemList *i = new ItemList;
 
         // Add item at beginning of list
-        i->item = newitem; i->prev = 0;
-        il->prev = i; i->next = il;
-        il = start = i;
-
-        selected = i;
+        i->item = newitem; i->prev = 0; i->next = il;
+        if(il) il->prev = i;
+        il = start = selected = i;
 }
 
 CListWnd::Item *CListWnd::getitem(unsigned int nr)
@@ -346,7 +352,7 @@ void CListWnd::insertitem(Item *newitem, unsigned int nr)
         ItemList *j = il, *k = new ItemList;
 
         for(i=0;i<nr;i++)
-                if(j) j = j->next; else return;
+                if(j->next) j = j->next; else return;
 
         k->item = newitem; k->prev = j; k->next = j->next;
         j->next->prev = k; j->next = k;
@@ -355,17 +361,19 @@ void CListWnd::insertitem(Item *newitem, unsigned int nr)
 void CListWnd::update()
 {
         ItemList *i;
+        unsigned int j = 0;
 
 	clear();
-        for(i=start;i && wherey() < insizey;i=i->next)
-                if(i) {
-                        if(i == selected)
-                                        memset(colmap+getcursor(),i->item->getcolor(Item::Selected),insizex);
-                                else
-                                        memset(colmap+getcursor(),i->item->getcolor(Item::Unselected),insizex);
-                                puts(i->item->gettext());
-                }
+        for(i=start;i && (wherey() < insizey);i=i->next) {
+                if(i == selected)
+                        memset(colmap+getcursor(),i->item->getcolor(Item::Selected),insizex);
+                else
+                        memset(colmap+getcursor(),i->item->getcolor(Item::Unselected),insizex);
+                puts(i->item->gettext());
+                j++;
+        }
 
+        Window_LogWrite("CListWnd::update(): %d items displayed.\n",j);
 	redraw();
 }
 
@@ -425,15 +433,19 @@ void CListWnd::scroll_up()
 void CListWnd::removeall()
 {
         ItemList *i;
+        unsigned int j = 0;
 
         while(il) {
                 i = il->next;
                 delete il->item;
                 delete il;
                 il = i;
+                j++;
         }
 
         selected = start = 0; selpos = 0;
+        Window_LogWrite("CListWnd::removeall(): %d items deleted.\n",j);
+
 }
 
 /***** CListWnd::Item *****/
