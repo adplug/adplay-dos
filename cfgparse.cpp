@@ -1,6 +1,6 @@
 /*
  * cfgparse.cpp - Config file parser
- * Copyright (c) 2001, 2002 Simon Peter <dn.tlp@gmx.net>
+ * Copyright (c) 2001 - 2003 Simon Peter <dn.tlp@gmx.net>
  *
  * This software is provided 'as-is', without any express or implied
  * warranty.  In no event will the authors be held liable for any damages
@@ -24,12 +24,12 @@
  * which defines the logfile name.
  */
 
-#undef DEBUG
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
+
+#define INILINECHUNK	80	// length of a chunk of an ini-line
 
 #ifdef DEBUG
 #define DEBUG_FILE      "debug2.log"     // File to log to
@@ -215,14 +215,17 @@ CfgParse::Error CfgParse::geterror()
 }
 
 bool CfgParse::empty(const char *str)
-// Returns true, if 'str' contains only whitespace
+// Returns true, if 'str' contains only whitespace (or comments)
 {
         unsigned int i;
 
-        for(i=0;i<strlen(str);i++)
+        for(i=0;i<strlen(str);i++) {
+		if(str[i] == ';')	// comment -- don't parse any further
+			return true;
                 if(str[i] != ' ' && str[i] != '\n' && str[i] != '\r' &&
                         str[i] != '\t')
                         return false;
+	}
 
         return true;
 }
@@ -230,21 +233,34 @@ bool CfgParse::empty(const char *str)
 bool CfgParse::parse_line()
 // Parse the next valid config file line and assign variables
 {
-        char iniline[MAXINILINE], *dummy;
+        char		*iniline, *dummy;
+	unsigned int	linesize = INILINECHUNK, i;
 
         err = None;
         dbg_printf("parse_line: ");
 
-        // read in next non-whitespace line
+        // read in next non-whitespace, non-comment line
+	iniline = (char *)malloc(linesize);
         do {
-                if(feof(f)) break;
-                fgets(iniline,MAXINILINE,f); linenum++;    // read line
+		i = 0;
+		do {
+			iniline[i] = fgetc(f);
+			i++;
+			if(i == linesize) {
+				linesize += INILINECHUNK;
+				iniline = (char *)realloc(iniline, linesize);
+			}
+		} while(!feof(f) && iniline[i - 1] != '\n');
+
+                linenum++; iniline[i - 1] = '\0';
+		dbg_printf("%i - \"%s\"\n", linenum, iniline);
         } while(empty(iniline));
 
         // Return error on EOF
         if(feof(f)) {
                 dbg_printf("End of file (Error::eof)\n");
                 err = eof;
+		free(iniline);
                 return false;
         }
 
@@ -254,21 +270,25 @@ bool CfgParse::parse_line()
                 dummy = strrchr(cursection,']'); *dummy = '\0';
                 dbg_printf("[%s] (Error::NextSection)\n",cursection);
                 err = NextSection;
+		free(iniline);
                 return true;
         }
         if(sscanf(iniline,"(%s)",cursubsection)) {
                 dummy = strrchr(cursubsection,')'); *dummy = '\0';
                 dbg_printf("(%s) (Error::NextSubsection)\n",cursubsection);
                 err = NextSubsection;
+		free(iniline);
                 return true;
         }
         if(sscanf(iniline,"%s = %s",var,val)) {
                 dbg_printf("<%s> = <%s>\n",var,val);
+		free(iniline);
                 return true;
         }
 
         dbg_printf("Junk detected! (Error::Invalid)\n");
         err = Invalid;
+	free(iniline);
         return false;
 }
 

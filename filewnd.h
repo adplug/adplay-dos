@@ -1,6 +1,6 @@
 /*
  * filewnd.h - Small File Manager for DOS w/ archive support
- * Copyright (c) 2002 Simon Peter <dn.tlp@gmx.net>
+ * Copyright (c) 2002, 2003 Simon Peter <dn.tlp@gmx.net>
  *
  * This software is provided 'as-is', without any express or implied
  * warranty.  In no event will the authors be held liable for any damages
@@ -32,7 +32,12 @@ public:
 
         // Colors
         enum FColor { FileSel, FileUnsel, DirSel, DirUnsel, DriveSel,
-                DriveUnsel };
+                DriveUnsel, SupportedSel, SupportedUnsel };
+
+	// Sort Methods
+	enum SortMethods { SortByName, SortByExtension };
+
+	SortMethods sortby;
 
         static void setfilecolor(FColor c, unsigned char v);
         static unsigned char getfilecolor(FColor c) { return fc[c]; }
@@ -70,4 +75,5 @@ private:
         char *extract(char *newfn, archive &a, char *oldfn);
         unsigned int drivenum(char *fname);
         void sortinsert(FileItem *newitem);
+	bool supported(const char *filename);
 };

@@ -26,8 +26,7 @@
 
 #include <stdio.h>
 
-#define MAXINILINE      256     // max. length of a line in the INI-File
-#define MAXINIITEM      16      // max. length of an item in the INI-File
+#define MAXINIITEM      256      // max. length of an item in the INI-File
 
 class CfgParse
 {

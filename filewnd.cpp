@@ -25,16 +25,17 @@
 #include <string.h>
 #include <sys/types.h>
 #include <direct.h>
+#include <adplug/adplug.h>
 
 #include "filewnd.h"
 #include "arcfile.h"
 
-#define MAXFCOLORS      6
+#define MAXFCOLORS      8
 
-static unsigned char FileWnd::fc[MAXFCOLORS] = {0x70,7,0x70,7,0x70,7};
+static unsigned char FileWnd::fc[MAXFCOLORS] = {0x70,7,0x70,7,0x70,7,0x70,7};
 
 FileWnd::FileWnd()
-        : CListWnd(), arcmode(0), err(None)
+        : CListWnd(), sortby(SortByName), arcmode(0), err(None)
 {
         *dirprefix = '\0';
 }
@@ -156,8 +157,22 @@ archive *FileWnd::getarchive()
         return &arc;
 }
 
+bool FileWnd::supported(const char *filename)
+/* Checks if a filename is supported by AdPlug. */
+{
+	CPlayers::const_iterator	i;
+	unsigned int			j;
+
+	for(i = CAdPlug::players.begin(); i != CAdPlug::players.end(); i++)
+		for(j = 0; (*i)->get_extension(j); j++)
+			if(CFileProvider::extension(filename, (*i)->get_extension(j)))
+				return true;
+
+	return false;
+}
+
 void FileWnd::listfiles()
-/* Takes a CListWnd and rebuilds it with a filelist of the current
+/* Rebuilds ourself (our CListWnd, actually) with a filelist of the current
  * working directory.
  */
 {
@@ -173,8 +188,13 @@ void FileWnd::listfiles()
                         f = new FileItem;
                         f->settext(direntp->d_name);
                         f->attr = FileItem::File;
-                        f->setcolor(Item::Selected,fc[FileSel]);
-                        f->setcolor(Item::Unselected,fc[FileUnsel]);
+			if(supported(direntp->d_name)) {
+	                        f->setcolor(Item::Selected,fc[SupportedSel]);
+	                        f->setcolor(Item::Unselected,fc[SupportedUnsel]);
+			} else {
+	                        f->setcolor(Item::Selected,fc[FileSel]);
+	                        f->setcolor(Item::Unselected,fc[FileUnsel]);
+			}
                         sortinsert(f);
                 }
 	rewinddir(dirp);
@@ -200,9 +220,10 @@ void FileWnd::sortinsert(FileItem *newitem)
 {
         unsigned int i = 0;
         FileItem *f;
+	char *ext1, *ext2;
 
         while(f = (FileItem *)getitem(i)) {
-                // at "end of list" ?
+                // at "end of list" (in respect to the item to be inserted)?
                 if(f->attr == FileItem::Drive ||
                        (newitem->attr == FileItem::Directory &&
                        f->attr == FileItem::File)) {
@@ -211,13 +232,33 @@ void FileWnd::sortinsert(FileItem *newitem)
                 }
 
                 // sort into list
-                if(strcmp(newitem->gettext(),f->gettext()) < 0) {
-                        if(i) insertitem(newitem,i-1); else additem(newitem);
-                        return;
-                }
+		switch(sortby) {
+		case SortByExtension:	// Sort first by extension, then by name
+			ext1 = strrchr(newitem->gettext(), '.');
+			ext2 = strrchr(f->gettext(), '.');
+
+			if(strcmp(ext1, ext2) > 0)	// still before
+				break;
+			if(strcmp(ext1, ext2) < 0) {	// already after
+	                        if(i) insertitem(newitem,i-1); else additem(newitem);
+				return;
+			}
+
+			// Fall through...
+
+		case SortByName:	// Sort by full filename
+	                if(strcmp(newitem->gettext(),f->gettext()) < 0) {
+	                        if(i) insertitem(newitem,i-1); else additem(newitem);
+	                        return;
+        	        }
+			break;
+		}
 
                 i++;
         }
+
+	// List is empty, just add item...
+	additem(newitem);
 }
 
 void FileWnd::listdrives()

@@ -3,7 +3,7 @@
                €    ‹€ €€    €€ €€       €€      €    ‹€    ‹€
                €     € €€‹‹‹‹‹ﬂ €€       €€‹‹‹‹‹ €     €    €€
 
-AdPlay/DOS 1.4, Copyright (c) 2000 - 2002 Simon Peter <dn.tlp@gmx.net>
+AdPlay/DOS 1.4, Copyright (c) 2000 - 2003 Simon Peter <dn.tlp@gmx.net>
 Website: http://adplug.sourceforge.net
 
 Description:
@@ -141,8 +141,11 @@ freely, subject to the following restrictions:
 
 Release History:
 ----------------
-- 1.4 (2002-11-21)
-  - UNRELEASED
+- 1.4 (2003-03-16)
+  - Linked with AdPlug 1.4
+  - File selector can now group files by extension, as an option.
+  - Files supported by AdPlug are now displayed in another color.
+  - The length of the playing song is now displayed in the song info window.
 
 - 1.3 (2002-11-21)
   - Linked with AdPlug 1.3 + patches

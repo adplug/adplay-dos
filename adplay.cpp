@@ -54,7 +54,7 @@
         "ColBorder\0ColCaption\0ColIn\0ColSelect\0ColUnselect\0ColBar\0" \
         "ColClip\0HighRes\0Force\0ColFileSel\0ColFileUnsel\0ColDirSel\0" \
         "ColDirUnsel\0ColDriveSel\0ColDriveUnsel\0Section\0ColFocus\0" \
-	"Database\0"
+	"Database\0ColSupportedSel\0ColSupportedUnsel\0SortBy\0"
 
 // global variables
 CAdPlugDatabase mydb;			  // Global Database instance
@@ -68,12 +68,14 @@ unsigned char backcol=7;                  // Background color
 unsigned int subsong,optind=1;
 bool hivideo=true,oplforce=false;         // Configuration
 volatile float time_ms=0.0f;              // Current playing time in ms
+unsigned long totaltime = 0;              // Total time of current subsong
 const char *optstr = "h?pofcb";           // Commandline options
 char configfile[PATH_MAX];                // Path to configfile
 VideoInfo dosvideo;                       // Stores previous (DOS's) video settings
 int volume=0;                             // Main volume
 float last_ms=0.0f;                       // helper variable for delay_ms()
 volatile bool inpoll = false;             // Flag set if in poll_player()
+volatile bool dopoll = false;             // Flag set if timer processing enabled
 char *tmpfn = 0;                          // Unique, temporary filename
 bool in_help;                             // Flag set when help is displayed
 
@@ -118,7 +120,8 @@ void poll_player(void)
         static float            oldfreq=18.2f;
 	static unsigned int	del=0,wait=0;
 
-        if(!p) return;  // no player in memory means we're not playing
+	if(!dopoll) return;	// Timer interrupt processing enabled?
+        if(!p) return;	// no player in memory means we're not playing
         if(inpoll) return; else inpoll = true;  // Running...
 
         time_ms += 1000/(oldfreq*(wait+1));
@@ -165,6 +168,8 @@ bool dosshell(char *cmd)
         if(retval) return false; else return true;
 }
 
+#define MAXINILINE	256
+
 void listcolors(char *fn, CListWnd &cl)
 /* Takes a CListWnd and rebuilds it with the color-sections list of
  * the given filename 'fn'.
@@ -188,6 +193,8 @@ void listcolors(char *fn, CListWnd &cl)
 		}
 	} while(!f.eof());
 }
+
+#undef MAXINILINE
 
 void display_help(CTxtWnd &w)
 /* Displays AdPlay's main help text into the given CTxtWnd. */
@@ -238,6 +245,11 @@ bool loadconfig(const char *fn, const char *section)
                 case 1: opl.setport(cp.readlong()); break;
                 case 14: oplforce = cp.readbool(); break;
 		case 23: mydb.load(cp.readstr()); break;
+		case 26:
+			if(!stricmp(cp.readstr(), "name"))
+				filesel.sortby = FileWnd::SortByName;
+			else if(!stricmp(cp.readstr(), "extension"))
+				filesel.sortby = FileWnd::SortByExtension;
 		}
         } while(!cp.geterror());
 
@@ -297,6 +309,8 @@ bool loadcolors(const char *fn, const char *section)
                 case 20: FileWnd::setfilecolor(FileWnd::DriveUnsel,cp.readlong()); break;
                 case 21: loadcolors(fn,cp.readstr()); break;
                 case 22: CWindow::setcolor(CWindow::Focus,cp.readlong()); break;
+		case 24: FileWnd::setfilecolor(FileWnd::SupportedSel,cp.readlong()); break;
+		case 25: FileWnd::setfilecolor(FileWnd::SupportedUnsel,cp.readlong()); break;
 		}
         } while(!cp.geterror());
 
@@ -336,6 +350,22 @@ void select_colors()
 				colwnd.select_next();
 				colwnd.update();
 				break;
+			case 73:	// [PgUp] - Up 5 items
+				colwnd.select_prev(5);
+				colwnd.update();
+				break;
+			case 81:	// [PgDn] - Down 5 items
+				colwnd.select_next(5);
+				colwnd.update();
+				break;
+			case 71:	// [Home] - Go to beginning
+				colwnd.setselection(0);
+				colwnd.update();
+				break;
+			case 79:	// [End] - Go to end
+				colwnd.setselection(0xFFFF);
+				colwnd.update();
+				break;
 			}
 		else		// handle all normal keys
 			switch(inkey) {
@@ -360,6 +390,8 @@ void refresh_songinfo(CTxtWnd &w)
 	sprintf(tmpstr,"Speed   : %d",p->getspeed()); w.puts(tmpstr);
 	sprintf(tmpstr,"Timer   : %.2f Hz",p->getrefresh()); w.puts(tmpstr);
         sprintf(tmpstr,"Time    : %d:%2d.%2d",time/1000/60,time/1000%60,time/10%100); w.puts(tmpstr);
+	sprintf(tmpstr,"Total   : %d:%2d.%2d",totaltime/1000/60,totaltime/1000%60,
+		totaltime/10%100); w.puts(tmpstr);
 	w.update();
 }
 
@@ -493,6 +525,7 @@ void play(char *fn)
         dbg_printf("*** play(\"%s\") ***\n",fn);
 
         stop();         // Stop eventually already playing player
+	dopoll = false;	// Critical section... (stop timer)
         p = CAdPlug::factory(fn,&opl);  // get corresponding player
 
         if(!p) {        // File not supported error
@@ -508,7 +541,9 @@ void play(char *fn)
         dbg_printf("We got a player! Reset infos and start playing...\n");
 
         // Reset playing infos
-        last_ms = time_ms = 0.0f; subsong = 0;
+        last_ms = time_ms = 0.0f; subsong = 0; totaltime = p->songlength(subsong);
+
+	dopoll = true;	// ...End Critical section (resume timer)
 
         // Update view with file information
         unsigned int i;
@@ -808,15 +843,21 @@ int main(int argc, char *argv[])
 			case 75:	// [Left Arrow] - previous subsong
 				if(p && subsong) {
 					subsong--;
+					dopoll = false; while(inpoll) ;	// critical section...
+					totaltime = p->songlength(subsong);
 					p->rewind(subsong);
                                         last_ms = time_ms = 0.0f;
+					dopoll = true;	// ...End critical section
 				}
 				break;
 			case 77:	// [Right Arrow] - next subsong
 				if(p && subsong < p->getsubsongs()-1) {
 					subsong++;
+					dopoll = false; while(inpoll) ;	// critical section...
+					totaltime = p->songlength(subsong);
 					p->rewind(subsong);
                                         last_ms = time_ms = 0.0f;
+					dopoll = true;	// ...End critical section
 				}
 				break;
                         case 73:        // [Page Up] - scroll up half window
