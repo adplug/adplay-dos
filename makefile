@@ -18,8 +18,8 @@ timerdir = timer
 
 all: adplay.exe
 
-adplay.exe: adplay.obj cfgparse.obj
-	$(LD) F adplay,cfgparse LIB $(windowdir)\window,$(timerdir)\timer,adplug $(LDFLAGS)
+adplay.exe: adplay.obj cfgparse.obj arcfile.obj
+	$(LD) F adplay,cfgparse,arcfile LIB $(windowdir)\window,$(timerdir)\timer,adplug $(LDFLAGS)
 	pmwlite /C4 adplay.exe
 	pmwsetup /Q /B0 adplay.exe
 
@@ -28,6 +28,11 @@ adplay.obj: adplay.cpp
 
 cfgparse.obj: cfgparse.cpp cfgparse.h
 
+arcfile.obj: arcfile.cpp arcfile.h
+
 clean: .symbolic
 	del *.obj
 	del adplay.exe
+
+distclean: clean .symbolic
+        del *.err

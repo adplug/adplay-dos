@@ -23,3 +23,7 @@ wndman.obj: wndman.cpp wndman.h
 
 clean: .symbolic
 	del *.obj
+	del window.lib
+
+distclean: clean .symbolic
+	del *.err

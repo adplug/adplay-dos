@@ -7,6 +7,7 @@ all: .symbolic
 
 clean: .symbolic
 	del *.obj
+	del timer.lib
 
 distclean: clean .symbolic
-	del timer.lib
+        del *.err

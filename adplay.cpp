@@ -20,6 +20,7 @@
 #include "window\window.h"
 #include "window\wndman.h"
 #include "cfgparse.h"
+#include "arcfile.h"
 
 // global defines
 #define ADPLAYVERS	"AdPlay v1.1"	// AdPlay version string
@@ -380,13 +381,50 @@ unsigned int getopt(int n, char **s)
 	return (i+1);
 }
 
+void listarc(zipfile &a, CListWnd &fl)
+{
+	unsigned int i;
+
+	fl.removeall();
+	fl.additem(".");
+	fl.additem("..");
+	for(i=0;i<a.getnames();i++)
+		fl.additem(a.getfname(i));
+}
+
+char *extract(char *newfn, zipfile &a, char *oldfn)
+{
+	char cmd[256];
+
+	strcpy(cmd,"pkunzip ");
+	strcat(cmd,a.getarcname());
+	strcat(cmd," ");
+	strcat(cmd,oldfn);
+	strcat(cmd," ");
+	strcat(cmd,getenv("TMP"));
+	setvideomode(3);
+	showcursor();
+	_heapshrink();
+	system(cmd);
+	setvideomode(3);
+	if(hivideo) load88font();
+	clearscreen(backcol);
+	hidecursor();
+	wnds.update();
+	strcpy(newfn,getenv("TMP"));
+	strcat(newfn,"\\");
+	strcat(newfn,oldfn);
+	return newfn;
+}
+
 int main(int argc, char *argv[])
 {
 	CAdPlug		ap;
 	char			inkey=0,*prgdir,*curdir;
-	bool			ext;
+	bool			ext,arcmode=false;
 	unsigned char	volume=0;
 	unsigned int	opt;
+	zipfile		archive;
 
 	cout << ADPLAYVERS << ", (c) 2000 - 2001 Simon Peter (dn.tlp@gmx.net) et al." << endl << endl;
 
@@ -555,15 +593,38 @@ int main(int argc, char *argv[])
 		else		// handle all normal keys
 			switch(inkey) {
 			case 13:	// [Return] - play file / change directory
-				if(isdirectory(filesel.getitem(filesel.getselection()))) {
-					chdir(filesel.getitem(filesel.getselection()));
-					filesel.selectitem(0);
-					listfiles(filesel);
-					filesel.update();
-					break;
+				char fname[PATH_MAX];
+
+				if(arcmode) {	// in archive mode?
+					if(!strcmp(filesel.getitem(filesel.getselection()),"."))
+						break;
+					if(!strcmp(filesel.getitem(filesel.getselection()),"..")) {
+						arcmode = false;
+						filesel.selectitem(0);
+						listfiles(filesel);
+						filesel.update();
+						break;
+					}
+					extract(fname,archive,filesel.getitem(filesel.getselection()));
+				} else {
+					if(isdirectory(filesel.getitem(filesel.getselection()))) {	// switch to subdir
+						chdir(filesel.getitem(filesel.getselection()));
+						filesel.selectitem(0);
+						listfiles(filesel);
+						filesel.update();
+						break;
+					}
+					if(archive.open(filesel.getitem(filesel.getselection()))) {	// is archive?
+						arcmode = true;
+						filesel.selectitem(0);
+						listarc(archive,filesel);
+						filesel.update();
+						break;
+					}
+					strcpy(fname,filesel.getitem(filesel.getselection()));
 				}
 				opl.init();
-				if(!(p = ap.factory(filesel.getitem(filesel.getselection()),&opl))) {
+				if(!(p = ap.factory(fname,&opl))) {
 					CTxtWnd errwnd;
 					errwnd.resize(26,3);
 					window_center(errwnd);
@@ -576,7 +637,6 @@ int main(int argc, char *argv[])
 					opl.init();
 					while(!getch());
 					wnds.update();
-					break;
 				} else {
 					unsigned int	i;
 					char			ins[20];
@@ -599,6 +659,8 @@ int main(int argc, char *argv[])
 					instwnd.update();
 					time_ms = 0;
 				}
+				if(arcmode)
+					remove(fname);
 				break;
 			case ' ':	// [Space] - fast forward
 				if(p) {
