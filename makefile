@@ -25,9 +25,14 @@ analopl.obj: analopl.cpp analopl.h
 adplug.obj: $(ADPLUGPATH)\adplug.cpp $(ADPLUGPATH)\adplug.h
 	$(CPP) $(CPPOP) -i=$(ADPLUGPATH)\players $(DEFINES) $(ADPLUGPATH)\adplug.cpp
 
-adplay.exe: adplay.cpp makefile adplug.obj analopl.obj
+cfgparse.obj: cfgparse.cpp cfgparse.h
+	$(CPP) $(CPPOP) $(DEFINES) cfgparse.cpp
+
+adplay.exe: adplay.cpp makefile adplug.obj analopl.obj cfgparse.obj
 	$(CPP) $(CPPOP) -i=$(ADPLUGPATH) -i=$(ADPLUGPATH)\players -i=$(WINDOWPATH) -i=$(TIMERPATH) $(DEFINES) adplay.cpp
-      $(LINK) F adplay,$(WINDOWPATH)\window,$(WINDOWPATH)\wndman,$(WINDOWPATH)\txtgfx,analopl,adplug LIB $(TIMERPATH)\timer,players SYS $(SYSTEM) $(LINKOP)
+      $(LINK) F adplay,$(WINDOWPATH)\window,$(WINDOWPATH)\wndman,$(WINDOWPATH)\txtgfx,analopl,adplug,cfgparse LIB $(TIMERPATH)\timer,players SYS $(SYSTEM) $(LINKOP)
+	pmwlite /C4 adplay.exe
+	pmwsetup /Q /B0 adplay.exe
 
 players.lib: .autodepend
 	$(CPP) $(CPPOP) $(DEFINES) $(ADPLUGPATH)\players\protrack.cpp

@@ -24,8 +24,18 @@ public:
 
 	void out_setcolor(Color c, unsigned char v);		// sets window color
 	unsigned char out_getcolor(Color c);			// returns window color
+
 	void setxy(unsigned char newx, unsigned char newy);	// sets new on-screen x/y position
+	unsigned char posx()
+	{ return x; };
+	unsigned char posy()
+	{ return y; };
+
 	void resize(unsigned char newx, unsigned char newy);	// resizes the window
+	unsigned char getsizex()
+	{ return sizex; };
+	unsigned char getsizey()
+	{ return sizey; };
 
 	void redraw();							// redraws the window on screen
 	virtual void update()

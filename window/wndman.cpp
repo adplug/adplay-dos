@@ -65,3 +65,13 @@ void CWndMan::update()
 		tw = tw->next;
 	}
 }
+
+void CWndMan::setcolor(CWindow::Color c, unsigned char v)
+{
+	window *tw = w;
+
+	while(tw) {
+		tw->wnd->out_setcolor(c,v);
+		tw = tw->next;
+	}
+}

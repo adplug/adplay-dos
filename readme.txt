@@ -3,19 +3,21 @@
                €    ‹€ €€    €€ €€       €€      €    ‹€    ‹€
                €     € €€‹‹‹‹‹ﬂ €€       €€‹‹‹‹‹ €     €    €€
 
-AdPlay v1.0 by Simon Peter (dn.tlp@gmx.net)
-Website: http://dfg.theunderdogs.org/adlib/adplay/
+AdPlay v1.0 by Simon Peter (dn.tlp@gmx.net) et al.
+Website: http://adplug.sourceforge.net/dos.shtml
 
 Description:
 ------------
-AdPlay is the DOS port of the AdPlug Winamp input plugin. As opposed to
-AdPlug's capability to replay through an OPL2 emulator, AdPlay requires
-an installed OPL2 audio board for song replay.
+AdPlay is AdPlug's MS-DOS based frontend. Sporting an exclusively
+programmed textmode interface, it provides a convenient playback
+experience. As opposed to AdPlug's capability to replay through
+an OPL2 emulator, AdPlay requires an installed OPL2 audio board
+for song replay.
 
 Supported formats:
 ------------------
 AdPlay implements unique file replayers for each supported format in order to
-achieve the best possible replay quality. Below is a list of all currently
+achieve the best possible playback quality. Below is a list of all currently
 supported file formats along with information about possible replay issues.
 
 - A2M: AdLib Tracker 2 by subz3ro
@@ -53,7 +55,7 @@ AdPlay is normally started without any commandline parameters, bringing it
 into interactive mode where you select the files to play using a file
 selector within a graphical user interface. Select files using the Up/Down
 cursor keys and press enter to start playback. F1 will bring up a help
-window, explaining all available key functions.
+window, explaining all other available key functions.
 
 You can also invoke AdPlay by giving it a file to play as commandline
 parameter, which will put AdPlay into background play mode, meaning it
@@ -61,24 +63,19 @@ will immediately return to DOS, playing the file in the background.
 
 Configuration:
 --------------
-The only available configuration is the color configuration, which is done
-through the file colors.ini, which should be placed inside AdPlay's
-program directory. You can refer to the default colors.ini file for help
-on how to create your own color configuration. Add color shemes by adding
-a new section into colors.ini. The file works like any other standard
-Microsoft INI File.
+AdPlay can be configured through the configuration file adplay.ini, which
+should be placed inside AdPlay's program directory. You can refer to the
+default adplay.ini file for help on how to create your own configuration
+sheme. Add more configuation shemes by adding a new section. The file
+works like any other standard Microsoft INI file.
 
 Known Problems:
 ---------------
-There is no support for MID, CMF, LAA & SCI files, known from AdPlug. I'm
-working on fixing the corresponding replayers to make them work under DOS.
-Please be patient.
-
 In a Windows 95 DOS Box, there are multiple problems with AdPlay and it
 is discouraged to use AdPlay from within Windows - Windows users should
-retain to AdPlug instead. Particulary, it is known that returning from a
-DOS Shell will destroy the sound and the SA2 replayer will hang the system
-while within a Windows 95 DOS Box.
+retain to an AdPlug Windows frontend instead. Particulary, it is known
+that returning from a DOS Shell will destroy the sound while within a
+Windows 95 DOS Box.
 
 Legal:
 ------

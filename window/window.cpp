@@ -145,13 +145,14 @@ void CWindow::clear()
 CTxtWnd::CTxtWnd()
 	: CWindow(), bufsize(DEFTXTBUFSIZE)
 {
-	txtbuf = new char [DEFTXTBUFSIZE];
+	txtbuf = new char [DEFTXTBUFSIZE+1];
+	txtbuf[DEFTXTBUFSIZE] = '\0';
 	erase();
 }
 
 void CTxtWnd::erase()
 {
-	memset(txtbuf,' ',bufsize);
+	memset(txtbuf,'\0',bufsize);
 	txtpos = 0;
 	start = 0;
 }
@@ -161,7 +162,8 @@ void CTxtWnd::outtext(const char *str)
 	unsigned int i;
 
 	if(txtpos+strlen(str) >= bufsize) {	// resize buffer
-		char *newbuf = new char[txtpos+strlen(str)];
+		char *newbuf = new char[txtpos+strlen(str)+1];
+		newbuf[txtpos+strlen(str)] = '\0';
 		memcpy(newbuf,txtbuf,bufsize);
 		delete [] txtbuf;
 		txtbuf = newbuf;
@@ -191,7 +193,7 @@ void CTxtWnd::scroll_down(unsigned int amount)
 			start += insizex;
 		else
 			start += delta;
-		if(start >= bufsize) start = bufsize-1;
+		if(start >= strlen(txtbuf)) start = strlen(txtbuf)-1;
 	}
 }
 

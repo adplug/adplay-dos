@@ -19,24 +19,26 @@
 #include "txtgfx.h"
 #include "window.h"
 #include "wndman.h"
+#include "cfgparse.h"
 
 // global defines
 #define ADPLAYVERS	"AdPlay v1.0"	// AdPlay version string
 #define DEFSTACK		(32*1024)		// default stack size for timer-replay in k's
-#define DEFPORT		0x388			// default AdLib port
-#define MAXINILINE	256			// max. length of a line in the INI-File, incl. 0-char
-#define MAXVAR		20			// max. length of a variable name
-#define COLORFILE		"colors.ini"	// filename of colors definition file
-#define DEFCOLORMAP	"default"		// name of default colormap
+#define CONFIGFILE	"adplay.ini"	// filename of default configuration file
+#define DEFCONFIG		"default"		// name of default configuration section
+#define FF_MSEC		5000			// milliseconds to fast forward
 
 // global variables
+CAnalopl			opl;
 CPlayer			*p=0;
-bool				playing=false;
+CWndMan			wnds;
 CTxtWnd			titlebar,infownd,songwnd,instwnd;
 CListWnd			filesel;
 CBarWnd			volbars(9,63),mastervol(1,63);
-CWndMan			wnds;
-unsigned char		backcol=7;
+unsigned char		backcol=7,colIn=7,colBorder=7,colCaption=7,colSelect=0x70,colUnselect=7;
+unsigned int		subsong;
+bool				hivideo=true;
+volatile unsigned int	time_ms;
 
 extern void wait_retrace(void);
 #pragma aux wait_retrace = \
@@ -54,14 +56,17 @@ void poll_player(void)
 	static float		oldfreq=0.0f;
 	static unsigned int	del=0,wait=0;
 
-	if(!playing)
+	if(!p)
 		return;
 
 	if(del) {
+		time_ms += 1000/oldfreq/(wait+1);
 		del--;
 		return;
-	} else
+	} else {
 		del = wait;
+		time_ms += 1000/oldfreq;
+	}
 
 	p->update();
 	if(oldfreq != p->getrefresh()) {
@@ -69,6 +74,14 @@ void poll_player(void)
 		del = wait = 18.2f / oldfreq;
 		tmSetNewRate(1192737/(oldfreq*(wait+1)));
 	}
+}
+
+void window_center(CWindow &w)
+{
+	if(hivideo)
+		w.setxy((80-w.getsizex())/2,(50-w.getsizey())/2);
+	else
+		w.setxy((80-w.getsizex())/2,(25-w.getsizey())/2);
 }
 
 void listfiles(CListWnd &fl)
@@ -95,7 +108,7 @@ void listcolors(char *fn, CListWnd &cl)
 /* takes a CListWnd and rebuilds it with the color-sections list of the given fn */
 {
 	ifstream	f(fn,ios::in | ios::nocreate);
-	char		vglsec[MAXINILINE],var[MAXVAR],*dummy;
+	char		vglsec[MAXINILINE],var[MAXINILINE],*dummy;
 
 	if(!f.is_open())			// file not found?
 		return;
@@ -117,14 +130,18 @@ void display_help(CTxtWnd &w)
 	w.setcaption("Help");
 	w.puts("Keyboard Control:\n"
 		 "-----------------\n\n"
-		 "Up/Down   - Select in Menu\n"
-		 "PgUp/PgDn - Scroll Instrument Names Window\n"
-		 "ESC       - Exit to DOS\n"
-		 "F1        - Help\n"
-		 "D         - Shell to DOS\n"
-		 "C         - Change Colormap\n"
-		 "M         - Display Song Message\n"
-		 "+/-       - Volume Up/Down");
+		 "Up/Down    - Select in Menu\n"
+		 "Left/Right - Previous/Next Subsong\n"
+		 "PgUp/PgDn  - Scroll Instrument Names Window\n"
+		 "Home/End   - Scroll Help / Song Message Window\n"
+		 "Return     - Play Song / Change Directory\n"
+		 "Space      - Fast Forward\n"
+		 "ESC        - Exit to DOS\n"
+		 "F1         - Help\n"
+		 "F2         - Change Screen Layout\n"
+		 "D          - Shell to DOS\n"
+		 "M          - Display Song Message\n"
+		 "+/-        - Volume Up/Down");
 	w.update();
 }
 
@@ -139,41 +156,112 @@ bool isdirectory(char *str)
 		return false;
 }
 
-bool loadcolors(char *fn, char *section)
+void read_stdwnd(CfgParse &cp, char *subsec, CWindow &w)
 {
-	ifstream		f(fn,ios::in | ios::nocreate);
-	char			vglsec[MAXINILINE],var[MAXVAR],*dummy;
-	unsigned int	val;
+	unsigned int	var;
 
-	if(!f.is_open())			// file not found?
-		return false;
+	if(!cp.subsection(subsec))
+		return;
 
-	do {					// search section
-		f.getline(vglsec,MAXINILINE);
-		sscanf(vglsec," [%s",var);
-		dummy = strrchr(var,']');
-		*dummy = '\0';
-	} while(strcmp(section,var) && !f.eof());
-	if(strcmp(section,var))	// section not found
-		return false;
+	while((var = cp.peekvar()) != cp.nitems() + 1)
+		switch(var) {
+		case 2: w.setxy(cp.readint(),w.posy()); break;
+		case 3: w.setxy(w.posx(),cp.readint()); break;
+		case 4: w.resize(cp.readint(),w.getsizey()); break;
+		case 5: w.resize(w.getsizex(),cp.readint()); break;
+		case 6: w.out_setcolor(w.Border,cp.readint()); break;
+		case 7: w.out_setcolor(w.Caption,cp.readint()); break;
+		case 8: w.out_setcolor(w.In,cp.readint()); break;
+		}
+}
 
-	do {					// parse section entries
-		f >> var; f.ignore(MAXINILINE,'='); f >> val;
-		if(!strcmp(var,"Background")) backcol = val;
-		if(!strcmp(var,"titleBorder")) titlebar.out_setcolor(titlebar.Border,val);
-		if(!strcmp(var,"titleIn")) titlebar.out_setcolor(titlebar.In,val);
-		if(!strcmp(var,"titleCaption")) titlebar.out_setcolor(titlebar.Caption,val);
-		if(!strcmp(var,"fileselBorder")) filesel.out_setcolor(filesel.Border,val);
-		if(!strcmp(var,"fileselSelect")) filesel.setcolor(filesel.Select,val);
-		if(!strcmp(var,"fileselUnselect")) filesel.setcolor(filesel.Unselect,val);
-		if(!strcmp(var,"fileselCaption")) filesel.out_setcolor(filesel.Caption,val);
-		if(!strcmp(var,"fileselIn")) filesel.out_setcolor(filesel.In,val);
-		if(!strcmp(var,"infowndBorder")) infownd.out_setcolor(infownd.Border,val);
-		if(!strcmp(var,"infowndIn")) infownd.out_setcolor(infownd.In,val);
-		if(!strcmp(var,"infowndCaption")) infownd.out_setcolor(infownd.Caption,val);
-	} while(!strchr(var,'[') && !f.eof());
+void loadcolors(char *fn, char *section)
+{
+	CfgParse		cp(fn);
+	unsigned int	var;
+	unsigned int 	val;
+	char			str[MAXINILINE];
 
-	return true;
+	cp.enum_vars("Background\0AdlibPort\0PosX\0PosY\0SizeX\0SizeY\0ColBorder\0ColCaption\0ColIn\0ColSelect\0"
+			 "ColUnselect\0ColBar\0ColClip\0HighRes\0");
+	cp.section(section);
+	while((var = cp.peekvar()) != cp.nitems() + 1)
+		switch(var) {
+		case 0: backcol = cp.readint(); break;
+		case 1: opl.setport(cp.readint()); break;
+		case 6: colBorder = cp.readint(); wnds.setcolor(CWindow::Border,colBorder); break;
+		case 7: colCaption = cp.readint(); wnds.setcolor(CWindow::Caption,colCaption); break;
+		case 8: colIn = cp.readint(); wnds.setcolor(CWindow::In,colIn); break;
+		case 9: colSelect = cp.readint(); filesel.setcolor(filesel.Select,colSelect); break;
+		case 10: colUnselect = cp.readint(); filesel.setcolor(filesel.Unselect,colUnselect); break;
+		case 11:
+			val = cp.readint();
+			volbars.setcolor(volbars.Bar,val);
+			mastervol.setcolor(mastervol.Bar,val);
+			break;
+		case 12:
+			val = cp.readint();
+			volbars.setcolor(volbars.Clip,val);
+			mastervol.setcolor(mastervol.Clip,val);
+			break;
+		case 13:
+			if(!strcmp(cp.readstr(str),"Yes")) {
+				hivideo = true;
+				load88font();
+				hidecursor();
+			} else {
+				hivideo = false;
+				setvideomode(3);
+				hidecursor();
+			}
+		}
+
+	read_stdwnd(cp,"titlebar",titlebar);
+	read_stdwnd(cp,"infownd",infownd);
+	read_stdwnd(cp,"songwnd",songwnd);
+	read_stdwnd(cp,"instwnd",instwnd);
+
+	if(cp.subsection("filesel"))
+		while((var = cp.peekvar()) != cp.nitems() + 1)
+			switch(var) {
+			case 2: filesel.setxy(cp.readint(),filesel.posy()); break;
+			case 3: filesel.setxy(filesel.posx(),cp.readint()); break;
+			case 4: filesel.resize(cp.readint(),filesel.getsizey()); break;
+			case 5: filesel.resize(filesel.getsizex(),cp.readint()); break;
+			case 6: filesel.out_setcolor(filesel.Border,cp.readint()); break;
+			case 7: filesel.out_setcolor(filesel.Caption,cp.readint()); break;
+			case 8: filesel.out_setcolor(filesel.In,cp.readint()); break;
+			case 9: filesel.setcolor(filesel.Select,cp.readint()); break;
+			case 10: filesel.setcolor(filesel.Unselect,cp.readint()); break;
+			}
+
+	if(cp.subsection("volbars"))
+		while((var = cp.peekvar()) != cp.nitems() + 1)
+			switch(var) {
+			case 2: volbars.setxy(cp.readint(),volbars.posy()); break;
+			case 3: volbars.setxy(volbars.posx(),cp.readint()); break;
+			case 4: volbars.resize(cp.readint(),volbars.getsizey()); break;
+			case 5: volbars.resize(volbars.getsizex(),cp.readint()); break;
+			case 6: volbars.out_setcolor(volbars.Border,cp.readint()); break;
+			case 7: volbars.out_setcolor(volbars.Caption,cp.readint()); break;
+			case 8: volbars.out_setcolor(volbars.In,cp.readint()); break;
+			case 11: volbars.setcolor(volbars.Bar,cp.readint()); break;
+			case 12: volbars.setcolor(volbars.Clip,cp.readint()); break;
+			}
+
+	if(cp.subsection("mastervol"))
+		while((var = cp.peekvar()) != cp.nitems() + 1)
+			switch(var) {
+			case 2: mastervol.setxy(cp.readint(),mastervol.posy()); break;
+			case 3: mastervol.setxy(mastervol.posx(),cp.readint()); break;
+			case 4: mastervol.resize(cp.readint(),mastervol.getsizey()); break;
+			case 5: mastervol.resize(mastervol.getsizex(),cp.readint()); break;
+			case 6: mastervol.out_setcolor(mastervol.Border,cp.readint()); break;
+			case 7: mastervol.out_setcolor(mastervol.Caption,cp.readint()); break;
+			case 8: mastervol.out_setcolor(mastervol.In,cp.readint()); break;
+			case 11: mastervol.setcolor(mastervol.Bar,cp.readint()); break;
+			case 12: mastervol.setcolor(mastervol.Clip,cp.readint()); break;
+			}
 }
 
 void select_colors()
@@ -182,10 +270,15 @@ void select_colors()
 	char		inkey=0;
 	bool		ext;
 
-	colwnd.resize(MAXVAR,10);
-	colwnd.setcaption("Colormaps");
-	colwnd.setxy(10,10);
-	listcolors(COLORFILE,colwnd);
+	colwnd.resize(20,10);
+	colwnd.setcaption("Layouts");
+	colwnd.out_setcolor(colwnd.Border,colBorder);
+	colwnd.out_setcolor(colwnd.In,colIn);
+	colwnd.out_setcolor(colwnd.Caption,colCaption);
+	colwnd.setcolor(colwnd.Select,colSelect);
+	colwnd.setcolor(colwnd.Unselect,colUnselect);
+	window_center(colwnd);
+	listcolors(CONFIGFILE,colwnd);
 	colwnd.update();
 
 	do {
@@ -211,8 +304,8 @@ void select_colors()
 			}
 		else		// handle all normal keys
 			switch(inkey) {
-			case 13:	// [Return] - select colorsheme
-				loadcolors(COLORFILE,colwnd.getitem(colwnd.getselection()));
+			case 13:	// [Return] - select layout
+				loadcolors(CONFIGFILE,colwnd.getitem(colwnd.getselection()));
 				break;
 			}
 	} while(inkey != 27 && inkey != 13);	// [ESC] - Exit menu
@@ -223,12 +316,13 @@ void refresh_songinfo(CTxtWnd &w)
 	char			tmpstr[80],*title = new char [p->gettitle().length()+1];
 
 	w.erase();
-	sprintf(tmpstr,"Position   : %d / %d",p->getorder(),p->getorders()); w.puts(tmpstr);
-	sprintf(tmpstr,"Pattern    : %d / %d",p->getpattern(),p->getpatterns()); w.puts(tmpstr);
-	sprintf(tmpstr,"Row        : %d",p->getrow()); w.puts(tmpstr);
-	sprintf(tmpstr,"Speed      : %d",p->getspeed()); w.puts(tmpstr);
-	sprintf(tmpstr,"Timer      : %.2f Hz",p->getrefresh()); w.puts(tmpstr);
-	sprintf(tmpstr,"Instruments: %d\n",p->getinstruments()); w.puts(tmpstr);
+	sprintf(tmpstr,"Subsong : %d / %d",subsong+1,p->getsubsongs()); w.puts(tmpstr);
+	sprintf(tmpstr,"Position: %d / %d",p->getorder(),p->getorders()); w.puts(tmpstr);
+	sprintf(tmpstr,"Pattern : %d / %d",p->getpattern(),p->getpatterns()); w.puts(tmpstr);
+	sprintf(tmpstr,"Row     : %d",p->getrow()); w.puts(tmpstr);
+	sprintf(tmpstr,"Speed   : %d",p->getspeed()); w.puts(tmpstr);
+	sprintf(tmpstr,"Timer   : %.2f Hz",p->getrefresh()); w.puts(tmpstr);
+	sprintf(tmpstr,"Time    : %d:%2d.%2d",time_ms/1000/60,time_ms/1000%60,time_ms/10%100); w.puts(tmpstr);
 	w.update();
 }
 
@@ -258,24 +352,28 @@ void refresh_volbars(CBarWnd &w, CAnalopl &opl)
 int main(int argc, char *argv[])
 {
 	CAdPlug		ap;
-	CAnalopl		opl(DEFPORT);
 	char			inkey=0,*prgdir,*curdir;
 	bool			ext;
 	unsigned char	volume=0;
 
-	cout << ADPLAYVERS << ", (c) 2000 - 2001 Simon Peter (dn.tlp@gmx.net)" << endl;
+	cout << ADPLAYVERS << ", (c) 2000 - 2001 Simon Peter (dn.tlp@gmx.net) et al." << endl << endl;
 
 	if(!strcmp(getenv("ADPLAY"),"S")) {
 		cout << "AdPlay already running!" << endl;
 		return 3;
-	} else
-		setenv("ADPLAY","S",1);
+	}
+
+	// init
+	wnds.reg(titlebar); wnds.reg(filesel); wnds.reg(songwnd); wnds.reg(instwnd); wnds.reg(volbars);
+	wnds.reg(mastervol); wnds.reg(infownd);
+	loadcolors(CONFIGFILE,DEFCONFIG);	// load default config
 
 /*	if(!opl.detect()) {
-		cout << "No OPL2 detected on port " << hex << DEFPORT << "h!" << endl;
+		cout << "No OPL2 detected!" << endl;
 		return 2;
 	} */
 
+	setenv("ADPLAY","S",1);
 	if(argc > 1)	// commandline playback
 		if(!(p = ap.factory(argv[1],&opl))) {
 			cout << "[" << argv[1] << "]: unsupported file type!" << endl;
@@ -283,47 +381,35 @@ int main(int argc, char *argv[])
 		} else {
 			cout << "Background playback... (type EXIT to stop)" << endl;
 			tmInit(poll_player,0xffff,DEFSTACK);
-			playing = true;
 			_heapshrink();
 			system(getenv("COMSPEC"));
-			playing = false;
 			tmClose();
 			delete p;
 			opl.init();
 			return 0;
 		}
 
-	// init
-	wnds.reg(titlebar); wnds.reg(filesel); wnds.reg(songwnd); wnds.reg(instwnd); wnds.reg(volbars);
-	wnds.reg(mastervol); wnds.reg(infownd);
+	// interactive mode
 	prgdir = getcwd(NULL,0);
-	loadcolors(COLORFILE,DEFCOLORMAP);
 	setvideomode(3);
-	load88font();
+	if(hivideo) load88font();
 	hidecursor();
 	clearscreen(backcol);
 	tmInit(poll_player,0xffff,DEFSTACK);
 	titlebar.puts(ADPLAYVERS ", (c) 2000 - 2001 by Simon Peter (dn.tlp@gmx.net) et al.");
 	titlebar.puts("Look into the README file for additional author information.");
 	titlebar.puts("This is free software under the terms and conditions of the LGPL.");
-	songwnd.setcaption("Song Info"); instwnd.setcaption("Instrument Names"); volbars.setcaption("VBars");
-	titlebar.setcaption(ADPLAYVERS); filesel.setcaption("File Selector"); mastervol.setcaption("Main Vol");
-	volbars.resize(11,17); volbars.setxy(55,25);
-	titlebar.resize(80,5); titlebar.setxy(0,0);
-	infownd.resize(61,20); infownd.setxy(19,5);
-	songwnd.resize(25,8); songwnd.setxy(55,42);
-	instwnd.resize(36,25); instwnd.setxy(19,25);
-	filesel.resize(19,45); filesel.setxy(0,5);
+	songwnd.setcaption("Song Info"); instwnd.setcaption("No Instruments"); volbars.setcaption("VBars");
+	titlebar.setcaption(ADPLAYVERS); filesel.setcaption("Directory"); mastervol.setcaption("Vol");
 	listfiles(filesel);
-	mastervol.resize(14,17); mastervol.setxy(66,25); mastervol.set(63);
+	mastervol.set(63);
 	wnds.update();
 	display_help(infownd);
 
 	// main loop
 	do {
-		wait_retrace();
-
-		if(playing) {	// auto-update windows
+		if(p) {	// auto-update windows
+			wait_retrace();
 			refresh_songinfo(songwnd);
 			refresh_volbars(volbars,opl);
 		}
@@ -332,6 +418,12 @@ int main(int argc, char *argv[])
 			if(!(inkey = toupper(getch()))) {
 				ext = true;
 				inkey = toupper(getch());
+
+/*				char teststr[10];
+				sprintf(teststr,"%d",inkey);
+				titlebar.erase();
+				titlebar.outtext(teststr);
+				titlebar.update(); */
 			} else
 				ext = false;
 		else
@@ -342,6 +434,15 @@ int main(int argc, char *argv[])
 			case 59:	// [F1] - display help
 				display_help(infownd);
 				break;
+			case 60:	// [F2] - change screen layout
+				curdir = getcwd(NULL,0);
+				chdir(prgdir);
+				select_colors();
+				chdir(curdir);
+				free(curdir);
+				clearscreen(backcol);
+				wnds.update();
+				break;
 			case 72:	// [Up Arrow] - menu up
 				filesel.select_prev();
 				filesel.update();
@@ -349,6 +450,20 @@ int main(int argc, char *argv[])
 			case 80:	// [Down Arrow] - menu down
 				filesel.select_next();
 				filesel.update();
+				break;
+			case 75:	// [Left Arrow] - previous subsong
+				if(p && subsong) {
+					subsong--;
+					p->rewind(subsong);
+					time_ms = 0;
+				}
+				break;
+			case 77:	// [Right Arrow] - next subsong
+				if(p && subsong < p->getsubsongs()-1) {
+					subsong++;
+					p->rewind(subsong);
+					time_ms = 0;
+				}
 				break;
 			case 73:	// [Page Up] - scroll up file info box
 				instwnd.scroll_up();
@@ -358,10 +473,18 @@ int main(int argc, char *argv[])
 				instwnd.scroll_down();
 				instwnd.update();
 				break;
+			case 71:	// [Home] - scroll up info window
+				infownd.scroll_up();
+				infownd.update();
+				break;
+			case 79:	// [End] - scroll down info window
+				infownd.scroll_down();
+				infownd.update();
+				break;
 			}
 		else		// handle all normal keys
 			switch(inkey) {
-			case 13:	// [Return] - play file / go to directory
+			case 13:	// [Return] - play file / change directory
 				if(isdirectory(filesel.getitem(filesel.getselection()))) {
 					chdir(filesel.getitem(filesel.getselection()));
 					filesel.selectitem(0);
@@ -369,21 +492,26 @@ int main(int argc, char *argv[])
 					filesel.update();
 					break;
 				}
-				playing = false;
 				opl.init();
 				if(!(p = ap.factory(filesel.getitem(filesel.getselection()),&opl))) {
 					CTxtWnd errwnd;
 					errwnd.resize(26,3);
-					errwnd.setxy(10,10);
+					window_center(errwnd);
 					errwnd.setcaption("Error!");
+					errwnd.out_setcolor(errwnd.Caption,colCaption);
+					errwnd.out_setcolor(errwnd.In,colIn);
+					errwnd.out_setcolor(errwnd.Border,colBorder);
 					errwnd.puts(" Unsupported file type!");
 					errwnd.update();
+					opl.init();
 					while(!getch());
 					wnds.update();
 					break;
 				} else {
 					unsigned int	i;
+					char			ins[20];
 
+					subsong = 0;
 					titlebar.erase();
 					titlebar.outtext("File Type: "); titlebar.puts(p->gettype());
 					titlebar.outtext("Title    : "); titlebar.puts(p->gettitle());
@@ -391,10 +519,25 @@ int main(int argc, char *argv[])
 					titlebar.update();
 					refresh_songdesc(infownd);
 					instwnd.erase();
-					for(i=0;i<p->getinstruments();i++)
+					for(i=0;i<p->getinstruments();i++) {
+                                                sprintf(ins,"%3d³",i+1);
+						instwnd.outtext(ins);
 						instwnd.puts(p->getinstrument(i));
+					}
+					sprintf(ins,"%d Instruments",p->getinstruments());
+					instwnd.setcaption(ins);
 					instwnd.update();
-					playing = true;
+					time_ms = 0;
+				}
+				break;
+			case ' ':	// [Space] - fast forward
+				if(p) {
+					unsigned int ff;
+					opl.setquiet();
+					for(ff=0;ff<FF_MSEC;ff+=1000/p->getrefresh())
+						p->update();
+					time_ms += ff;
+					opl.setquiet(false);
 				}
 				break;
 			case 'M':	// refresh song info
@@ -406,19 +549,10 @@ int main(int argc, char *argv[])
 				_heapshrink();
 				system(getenv("COMSPEC"));
 				setvideomode(3);
-				load88font();
+				if(hivideo) load88font();
 				clearscreen(backcol);
 				hidecursor();
 				listfiles(filesel);
-				wnds.update();
-				break;
-			case 'C':	// switch color scheme
-				curdir = getcwd(NULL,0);
-				chdir(prgdir);
-				select_colors();
-				chdir(curdir);
-				free(curdir);
-				clearscreen(backcol);
 				wnds.update();
 				break;
 			case '+':
