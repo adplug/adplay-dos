@@ -53,7 +53,6 @@
         "ColClip\0HighRes\0Force\0"
 
 // global variables
-CAdPlug ap;                               // Main AdPlug object
 CAnalopl opl;                             // The only output device
 CPlayer *p=0;                             // Main player (0 = none loaded)
 CWndMan wnds;                             // Window manager
@@ -459,7 +458,7 @@ void play(char *fn)
 /* Start playback with file 'fn' */
 {
         opl.init();
-        p = ap.factory(fn,&opl);     // get corresponding player
+        p = CAdPlug::factory(fn,&opl);     // get corresponding player
 
         if(!p) {
                 // File not supported error
@@ -583,6 +582,7 @@ int main(int argc, char *argv[])
 	} else
                 setenv("ADPLAY","S",1); // flag our instance
 
+        CAdPlug::debug_output("debug.log"); // Redirect AdPlug's debug to file
         // Build path to default configuration file (in program's directory)
 	_splitpath(argv[0],configfile,configfile+2,NULL,NULL);
         strcat(configfile,CONFIGFILE);
@@ -616,7 +616,7 @@ int main(int argc, char *argv[])
 				return 2;
 			}
 
-			if(!(p = ap.factory(argv[optind],&opl))) {
+                        if(!(p = CAdPlug::factory(argv[optind],&opl))) {
 				cout << "[" << argv[optind] << "]: unsupported file type!" << endl;
 				return 1;
 			} else {
