@@ -27,10 +27,6 @@ public:
 	void setxy(unsigned char newx, unsigned char newy);	// sets new on-screen x/y position
 	void resize(unsigned char newx, unsigned char newy);	// resizes the window
 
-	void show()								// shows the window
-	{ visible = true; };
-	void hide()								// hides the window
-	{ visible = false; };
 	void redraw();							// redraws the window on screen
 	virtual void update()
 	{ };
@@ -58,10 +54,6 @@ protected:
 	bool autocolor;							// automatically colorize output flag
 
 private:
-	// flags
-	bool visible;							// visibility flag
-	bool refreshbb;							// refresh background buffer flag
-
 	// positions, sizes & colors
 	unsigned char x,y,sizex,sizey;				// window position and size
 	unsigned int curpos;						// cursor position inside window text buffer
@@ -69,7 +61,6 @@ private:
 
 	// buffers
 	char *caption;							// window caption
-	char *backbuf;							// window background buffer
 };
 
 class CTxtWnd: public CWindow

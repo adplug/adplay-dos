@@ -87,10 +87,11 @@ of the LGPL can be found at http://www.gnu.org/copyleft/lesser.html.
 
 Release History:
 ----------------
-- v1.0 (2001-06-01)
+- v1.0 (2001-06-10)
   - AdPlay is open-source now!
   - Using PMODE/W stub
   - Brought up-to-date with AdPlug 0.10, except U6M player
   - New timer routine
+  - New, customizable screen layout
 - v1.0 BETA (2001-02-17)
   - First beta release.

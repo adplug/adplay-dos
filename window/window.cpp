@@ -13,7 +13,7 @@
 #define DEFWNDPOSX	0
 #define DEFWNDPOSY	0
 
-CWindow::CWindow(): x(DEFWNDPOSX), y(DEFWNDPOSY), visible(true), refreshbb(false), curpos(0), autocolor(true), backbuf(0), colmap(0), wndbuf(0), caption(0)
+CWindow::CWindow(): x(DEFWNDPOSX), y(DEFWNDPOSY), curpos(0), autocolor(true), colmap(0), wndbuf(0), caption(0)
 {
 	setcaption("Window");
 	memset(color,7,MAXCOLORS);
@@ -24,7 +24,6 @@ CWindow::~CWindow(void)
 {
 	delete [] colmap;
 	delete [] wndbuf;
-	delete [] backbuf;
 }
 
 void CWindow::setcaption(char *newcap)
@@ -61,10 +60,8 @@ void CWindow::resize(unsigned char newx, unsigned char newy)
 {
 	insizex = newx - 2; insizey = newy - 2;
 	sizex = newx; sizey = newy;
-	if(backbuf) delete [] backbuf;
 	if(wndbuf) delete [] wndbuf;
 	if(colmap) delete [] colmap;
-	backbuf = new char [newx*newy];
 	wndbuf = new char [insizex*insizey];
 	colmap = new unsigned char [insizex*insizey];
 	memset(wndbuf,' ',insizex*insizey);
@@ -75,46 +72,39 @@ void CWindow::redraw(void)
 {
 	unsigned char i,j,wndx,wndy=0;
 
-	if(visible) {	// draw window contents
-		settextposition(y,x);
-		::setcolor(color[Border]);
-		outchar('Ú');
-		for(i=x+1;i<x+((sizex-1)/2-(strlen(caption)/2+2));i++)
-			outchar('Ä');
-		::outtext("> ");
-		::setcolor(color[Caption]);
-		::outtext(caption);
-		::setcolor(color[Border]);
-		::outtext(" <");
-		for(i+=strlen(caption)+4;i<x+sizex-1;i++)
-			outchar('Ä');
-		outchar('¿');
-		for(j=y+1;j<y+sizey-1;j++) {
-			settextposition(j,x);
-			wndx = 0;
-			for(i=x;i<x+sizex;i++)
-				if(i==x || i==x+sizex-1) {
-					::setcolor(color[Border]);
-					outchar('³');
-				} else {
-					::setcolor(colmap[wndy*insizex+wndx]);
-					outchar(wndbuf[wndy*insizex+wndx]);
-					wndx++;
-				}
-			wndy++;
-		}
-		::setcolor(color[Border]);
-		settextposition(y+sizey-1,x);
-		outchar('À');
-		for(i=x+1;i<x+sizex-1;i++)
-			outchar('Ä');
-		outchar('Ù');
-	} else		// draw back buffer
-		for(j=y;j<y+sizey;j++)
-			for(i=x;i<x+sizex;i++) {
-				settextposition(j,i);
-				outchar(backbuf[j*sizex+i]);
+	settextposition(y,x);
+	::setcolor(color[Border]);
+	outchar('Ú');
+	for(i=x+1;i<x+((sizex-1)/2-(strlen(caption)/2+2));i++)
+		outchar('Ä');
+	::outtext("> ");
+	::setcolor(color[Caption]);
+	::outtext(caption);
+	::setcolor(color[Border]);
+	::outtext(" <");
+	for(i+=strlen(caption)+4;i<x+sizex-1;i++)
+		outchar('Ä');
+	outchar('¿');
+	for(j=y+1;j<y+sizey-1;j++) {
+		settextposition(j,x);
+		wndx = 0;
+		for(i=x;i<x+sizex;i++)
+			if(i==x || i==x+sizex-1) {
+				::setcolor(color[Border]);
+				outchar('³');
+			} else {
+				::setcolor(colmap[wndy*insizex+wndx]);
+				outchar(wndbuf[wndy*insizex+wndx]);
+				wndx++;
 			}
+		wndy++;
+	}
+	::setcolor(color[Border]);
+	settextposition(y+sizey-1,x);
+	outchar('À');
+	for(i=x+1;i<x+sizex-1;i++)
+		outchar('Ä');
+	outchar('Ù');
 }
 
 void CWindow::outc(char c)
@@ -147,7 +137,7 @@ void CWindow::puts(char *str)
 
 void CWindow::clear()
 {
-	memset(colmap,In,insizex*insizey);
+	memset(colmap,color[In],insizex*insizey);
 	memset(wndbuf,' ',insizex*insizey);
 	setcursor(0,0);
 }
@@ -228,6 +218,7 @@ CListWnd::CListWnd()
 	: CWindow(), selcol(0x70), unselcol(7)
 {
 	removeall();
+	autocolor = false;
 }
 
 unsigned int CListWnd::additem(char *str)
@@ -268,13 +259,10 @@ void CListWnd::update()
 	clear();
 	for(i=start;(i<start+insizey) && (i<numitems);i++)
 		if(useitem[i]) {
-			if(i == selected) {
+			if(i == selected)
 				memset(colmap+getcursor(),selcol,insizex);
-				out_setcolor(In,selcol);
-			} else {
+			else
 				memset(colmap+getcursor(),unselcol,insizex);
-				out_setcolor(In,unselcol);
-			}
 			puts(item[i]);
 		}
 	redraw();
@@ -367,4 +355,28 @@ void CBarWnd::set(unsigned int v, unsigned int n)
 			for(k=0;k<insizex/nbars;k++)
 				outc('=');
 		}
+}
+
+void CBarWnd::setcolor(BColor c, unsigned char v)
+{
+	switch(c) {
+	case Bar:
+		barcol = v;
+		break;
+	case Clip:
+		clipcol = v;
+		break;
+	}
+}
+
+unsigned char CBarWnd::getcolor(BColor c)
+{
+	switch(c) {
+	case Bar:
+		return barcol;
+	case Clip:
+		return clipcol;
+	default:
+		return 0;
+	}
 }

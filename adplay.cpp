@@ -27,6 +27,7 @@
 #define MAXINILINE	256			// max. length of a line in the INI-File, incl. 0-char
 #define MAXVAR		20			// max. length of a variable name
 #define COLORFILE		"colors.ini"	// filename of colors definition file
+#define DEFCOLORMAP	"default"		// name of default colormap
 
 // global variables
 CPlayer			*p=0;
@@ -166,6 +167,7 @@ bool loadcolors(char *fn, char *section)
 		if(!strcmp(var,"fileselSelect")) filesel.setcolor(filesel.Select,val);
 		if(!strcmp(var,"fileselUnselect")) filesel.setcolor(filesel.Unselect,val);
 		if(!strcmp(var,"fileselCaption")) filesel.out_setcolor(filesel.Caption,val);
+		if(!strcmp(var,"fileselIn")) filesel.out_setcolor(filesel.In,val);
 		if(!strcmp(var,"infowndBorder")) infownd.out_setcolor(infownd.Border,val);
 		if(!strcmp(var,"infowndIn")) infownd.out_setcolor(infownd.In,val);
 		if(!strcmp(var,"infowndCaption")) infownd.out_setcolor(infownd.Caption,val);
@@ -234,7 +236,8 @@ void refresh_songdesc(CTxtWnd &w)
 {
 	w.erase();
 	w.setcaption("Song Message");
-	w.puts(p->getdesc());
+	if(p)
+		w.puts(p->getdesc());
 	w.update();
 }
 
@@ -294,7 +297,7 @@ int main(int argc, char *argv[])
 	wnds.reg(titlebar); wnds.reg(filesel); wnds.reg(songwnd); wnds.reg(instwnd); wnds.reg(volbars);
 	wnds.reg(mastervol); wnds.reg(infownd);
 	prgdir = getcwd(NULL,0);
-	loadcolors(COLORFILE,"default");
+	loadcolors(COLORFILE,DEFCOLORMAP);
 	setvideomode(3);
 	load88font();
 	hidecursor();
@@ -376,8 +379,7 @@ int main(int argc, char *argv[])
 					errwnd.puts(" Unsupported file type!");
 					errwnd.update();
 					while(!getch());
-					errwnd.hide();
-					errwnd.update();
+					wnds.update();
 					break;
 				} else {
 					unsigned int	i;

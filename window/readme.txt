@@ -14,13 +14,14 @@ Window Classes
 CWindow	: Basic framed window w/o any behaviours
 CTxtWnd	: Window that contains text
 CListWnd	: Listbox that can have one item selected
+CBarWnd	: Window containing vertical bar(s)
 
 	The classes can be inherited to extend their
 functionality.
 
 Output Library
 
-	The output library provides BIOS console output and
+	The output library provides hardware console output and
 some special features, like cursor on/off, clear screen
 and video mode selection.
 
