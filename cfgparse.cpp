@@ -38,16 +38,12 @@ static FILE *f_log;
 
 static void dbg_printf(char *fmt, ...)
 {
-        static char logbuffer[256];
+        va_list argptr;
 
         // build debug log string
-        va_list argptr;
         va_start(argptr, fmt);
-        vsprintf(logbuffer, fmt, argptr);
+        vfprintf(f_log, fmt, argptr);
         va_end(argptr);
-
-        // print out log line
-        fprintf(f_log,logbuffer);
 }
 #else
 static void dbg_printf(char *fmt, ...) { }
