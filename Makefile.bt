@@ -10,10 +10,10 @@ LIBRARIES = window.lib timer.lib adplug.lib
 OBJS = adplay.obj cfgparse.obj arcfile.obj filewnd.obj
 
 ##### Source distribution #####
-distfile = adply13s.zip
+distfile = adply14s.zip
 DIST = adplay.cpp adplay.ini arcfile.cpp arcfile.h cfgparse.cpp cfgparse.h &
 readme.txt filewnd.cpp filewnd.h TODO build.txt helptxt.h
 
 ##### Binary distribution #####
-binarydistfile = adplay13.zip
+binarydistfile = adplay14.zip
 BINARYDIST = adplay.exe adplay.ini readme.txt

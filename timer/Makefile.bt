@@ -9,4 +9,4 @@ imsrtns.h readme.txt
 include_INST = timer.h
 lib_INST = timer.lib
 
-distfile = timer10.zip
+distfile = timer11.zip

@@ -12,5 +12,5 @@ DIST = txtgfx.c txtgfx.h window.cpp window.h wndman.cpp wndman.h readme.txt &
 include_INST = txtgfx.h window.h wndman.h
 lib_INST = window.lib
 
-distfile = window10.zip
+distfile = window11.zip
 includesubdir = window

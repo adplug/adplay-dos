@@ -3,7 +3,7 @@
                €    ‹€ €€    €€ €€       €€      €    ‹€    ‹€
                €     € €€‹‹‹‹‹ﬂ €€       €€‹‹‹‹‹ €     €    €€
 
-AdPlay/DOS 1.3, Copyright (c) 2000 - 2002 Simon Peter <dn.tlp@gmx.net>
+AdPlay/DOS 1.4, Copyright (c) 2000 - 2002 Simon Peter <dn.tlp@gmx.net>
 Website: http://adplug.sourceforge.net
 
 Description:
@@ -141,6 +141,9 @@ freely, subject to the following restrictions:
 
 Release History:
 ----------------
+- 1.4 (2002-11-21)
+  - UNRELEASED
+
 - 1.3 (2002-11-21)
   - Linked with AdPlug 1.3 + patches
   - Colorized & sorted file selector
