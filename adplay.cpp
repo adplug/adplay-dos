@@ -40,7 +40,7 @@ unsigned int		subsong,optind=1;
 bool				hivideo=true,oplforce=false;
 volatile unsigned int	time_ms;
 char				*optstr = "h?pofcb";
-char				*configfile = new char[13];
+char				configfile[PATH_MAX];
 
 extern void wait_retrace(void);
 #pragma aux wait_retrace = \
@@ -399,7 +399,8 @@ int main(int argc, char *argv[])
 	// init
 	wnds.reg(titlebar); wnds.reg(filesel); wnds.reg(songwnd); wnds.reg(instwnd); wnds.reg(volbars);
 	wnds.reg(mastervol); wnds.reg(infownd);
-	strcpy(configfile,CONFIGFILE); loadcolors(CONFIGFILE,DEFCONFIG);	// load default config
+	_splitpath(argv[0],configfile,configfile+2,NULL,NULL); strcat(configfile,CONFIGFILE);
+	loadcolors(configfile,DEFCONFIG);	// load default config
 
 	// read commandline
 	while(opt = getopt(argc,argv))
@@ -422,8 +423,6 @@ int main(int argc, char *argv[])
 			oplforce = true;
 			break;
 		case 5:	// set config file
-			delete [] configfile;
-			configfile = new char [strlen(argv[optind])+1];
 			strcpy(configfile,argv[optind++]);
 			loadcolors(configfile,DEFCONFIG);
 			break;
