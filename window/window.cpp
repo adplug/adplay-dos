@@ -1,23 +1,23 @@
 /*
- * window.cpp - Basic Textmode Windows, by Simon Peter (dn.tlp@gmx.net)
+ * window.cpp - Textmode window library, by Simon Peter (dn.tlp@gmx.net)
  */
 
 #include <stdio.h>
 #include <string.h>
 
-#include <conio.h>
-
-//#include <stdarg.h>
-
 #include "txtgfx.h"
 #include "window.h"
 
-CWindow::CWindow(unsigned char nsizex, unsigned char nsizey, unsigned char nx, unsigned char ny)
-	: x(nx), y(ny), visible(true), refreshbb(false), curpos(0), autocolor(true), backbuf(0), colmap(0), wndbuf(0)
+#define DEFWNDSIZEX	20
+#define DEFWNDSIZEY	20
+#define DEFWNDPOSX	0
+#define DEFWNDPOSY	0
+
+CWindow::CWindow(): x(DEFWNDPOSX), y(DEFWNDPOSY), visible(true), refreshbb(false), curpos(0), autocolor(true), backbuf(0), colmap(0), wndbuf(0), caption(0)
 {
-	strncpy(caption,"Window",MAXCAPTION);
+	setcaption("Window");
 	memset(color,7,MAXCOLORS);
-	resize(nsizex,nsizey);
+	resize(DEFWNDSIZEX,DEFWNDSIZEY);
 }
 
 CWindow::~CWindow(void)
@@ -25,6 +25,36 @@ CWindow::~CWindow(void)
 	delete [] colmap;
 	delete [] wndbuf;
 	delete [] backbuf;
+}
+
+void CWindow::setcaption(char *newcap)
+{
+	if(caption)
+		delete [] caption;
+
+	caption = new char [strlen(newcap)+1];
+	strcpy(caption,newcap);
+}
+
+char *CWindow::getcaption()
+{
+	return caption;
+}
+
+void CWindow::setxy(unsigned char newx, unsigned char newy)
+{
+	x = newx;
+	y = newy;
+}
+
+void CWindow::out_setcolor(Color c, unsigned char v)
+{
+	color[c] = v;
+}
+
+unsigned char CWindow::out_getcolor(Color c)
+{
+	return color[c];
 }
 
 void CWindow::resize(unsigned char newx, unsigned char newy)
@@ -63,16 +93,17 @@ void CWindow::redraw(void)
 			settextposition(j,x);
 			wndx = 0;
 			for(i=x;i<x+sizex;i++)
-				if(i==x || i==x+sizex-1)
+				if(i==x || i==x+sizex-1) {
+					::setcolor(color[Border]);
 					outchar('³');
-				else {
+				} else {
 					::setcolor(colmap[wndy*insizex+wndx]);
 					outchar(wndbuf[wndy*insizex+wndx]);
-					::setcolor(color[Border]);
 					wndx++;
 				}
 			wndy++;
 		}
+		::setcolor(color[Border]);
 		settextposition(y+sizey-1,x);
 		outchar('À');
 		for(i=x+1;i<x+sizex-1;i++)
@@ -121,14 +152,14 @@ void CWindow::clear()
 	setcursor(0,0);
 }
 
-CTxtWnd::CTxtWnd(unsigned char nsizex, unsigned char nsizey, unsigned char nx, unsigned char ny)
-	: CWindow(nsizex, nsizey, nx, ny), bufsize(DEFTXTBUFSIZE)
+CTxtWnd::CTxtWnd()
+	: CWindow(), bufsize(DEFTXTBUFSIZE)
 {
 	txtbuf = new char [DEFTXTBUFSIZE];
-	clear();
+	erase();
 }
 
-void CTxtWnd::clear()
+void CTxtWnd::erase()
 {
 	memset(txtbuf,' ',bufsize);
 	txtpos = 0;
@@ -153,21 +184,12 @@ void CTxtWnd::outtext(const char *str)
 	}
 }
 
-void CTxtWnd::redraw()
+void CTxtWnd::update()
 {
-	CWindow::clear();
+	clear();
 	CWindow::outtext(txtbuf+start);
-	CWindow::redraw();
+	redraw();
 }
-
-/*void CTxtWnd::printf(char *format, ...)
-{
-	va_list	ap;
-	char		bigstr[MAXSTRING];
-
-	sprintf(bigstr,format,ap);
-	puts(bigstr);
-} */
 
 void CTxtWnd::scroll_down(unsigned int amount)
 {
@@ -202,8 +224,8 @@ void CTxtWnd::scroll_up(unsigned int amount)
 	}
 }
 
-CListWnd::CListWnd(unsigned char nsizex, unsigned char nsizey, unsigned char nx, unsigned char ny)
-	: CWindow(nsizex, nsizey, nx, ny), selcol(0x70), unselcol(7)
+CListWnd::CListWnd()
+	: CWindow(), selcol(0x70), unselcol(7)
 {
 	removeall();
 }
@@ -239,7 +261,7 @@ char *CListWnd::getitem(unsigned int nr)
 		return 0;
 }
 
-void CListWnd::redraw()
+void CListWnd::update()
 {
 	unsigned int i;
 
@@ -248,15 +270,14 @@ void CListWnd::redraw()
 		if(useitem[i]) {
 			if(i == selected) {
 				memset(colmap+getcursor(),selcol,insizex);
-				setcolor(In,selcol);
+				out_setcolor(In,selcol);
 			} else {
 				memset(colmap+getcursor(),unselcol,insizex);
-				setcolor(In,unselcol);
+				out_setcolor(In,unselcol);
 			}
 			puts(item[i]);
 		}
-
-	CWindow::redraw();
+	redraw();
 }
 
 void CListWnd::select_next()
@@ -286,7 +307,7 @@ void CListWnd::removeall()
 	numitems = 0;
 }
 
-void CListWnd::setcolor(Color c, unsigned char v)
+void CListWnd::setcolor(LColor c, unsigned char v)
 {
 	switch(c) {
 	case Select:
@@ -295,13 +316,10 @@ void CListWnd::setcolor(Color c, unsigned char v)
 	case Unselect:
 		unselcol = v;
 		break;
-	default:
-		CWindow::setcolor((CWindow::Color)c,v);
-		break;
 	}
 }
 
-unsigned char CListWnd::getcolor(Color c)
+unsigned char CListWnd::getcolor(LColor c)
 {
 	switch(c) {
 	case Select:
@@ -309,6 +327,44 @@ unsigned char CListWnd::getcolor(Color c)
 	case Unselect:
 		return unselcol;
 	default:
-		return CWindow::getcolor((CWindow::Color)c);
+		return 0;
 	}
+}
+
+CBarWnd::CBarWnd(unsigned int n, unsigned int nmax)
+	: CWindow(), barcol(7), clipcol(4), nbars(n), max(nmax)
+{
+	unsigned int i;
+
+	if(!n) return;
+	bars = new unsigned int [n];
+	for(i=0;i<n;i++)
+		bars[i] = 0;
+	autocolor = false;
+}
+
+void CBarWnd::update()
+{
+	unsigned int i;
+
+	for(i=0;i<insizex*insizey;i++)
+		if(i<(insizey/4)*insizex)
+			colmap[i] = clipcol;
+		else
+			colmap[i] = barcol;
+	redraw();
+}
+
+void CBarWnd::set(unsigned int v, unsigned int n)
+{
+	unsigned int i,j,k;
+
+	memset(wndbuf,' ',insizex*insizey);
+	bars[n] = v;
+	for(i=0;i<nbars;i++)
+		for(j=0;j<=(insizey*bars[i])/max;j++) {
+			setcursor((insizex*i)/nbars,insizey-j);
+			for(k=0;k<insizex/nbars;k++)
+				outc('=');
+		}
 }

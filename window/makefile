@@ -1,10 +1,13 @@
-all: txtgfx.obj window.obj .symbolic
+all: makefile txtgfx.obj window.obj wndman.obj .symbolic
 
 txtgfx.obj: txtgfx.c txtgfx.h
 	wcc386 txtgfx.c
 
 window.obj: window.cpp window.h
 	wpp386 window.cpp
+
+wndman.obj: wndman.cpp wndman.h
+	wpp386 wndman.cpp
 
 clean: .symbolic
 	del *.obj

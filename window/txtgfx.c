@@ -8,10 +8,9 @@
 static unsigned char curcol=7;			/* current color */
 static unsigned char scrsizex=0,scrsizey=0;	/* screen resolution */
 static unsigned int scrpos=0;				/* current cursor position */
-static unsigned char *vptr = 0xb8000;		/* pointer to textmode vidmem */
+static unsigned char *vptr=0xb8000;			/* pointer to textmode vidmem */
 
 void clearscreen(unsigned char col)
-/* clear screen with given color and reset cursor position */
 {
 	unsigned int i;
 
@@ -22,8 +21,16 @@ void clearscreen(unsigned char col)
 	scrpos = 0;
 }
 
+unsigned char getvideomode(void)
+{
+	union REGS regs;
+
+	regs.h.ah = 0xf;
+	int386(0x10, &regs, &regs);
+	return regs.h.al;
+}
+
 void setvideomode(unsigned char mode)
-/* set BIOS video mode */
 {
 	union REGS regs;
 
@@ -51,7 +58,6 @@ void setvideomode(unsigned char mode)
 }
 
 void load88font(void)
-/* load & activate 8x8 font */
 {
 	union REGS regs;
 	static char font = 0;
@@ -68,7 +74,6 @@ void load88font(void)
 }
 
 void showcursor(void)
-/* show hardware cursor on screen */
 {
 	union REGS regs;
 
@@ -79,7 +84,6 @@ void showcursor(void)
 }
 
 void hidecursor(void)
-/* hide hardware cursor */
 {
 	union REGS regs;
 
@@ -89,19 +93,16 @@ void hidecursor(void)
 }
 
 void setcolor(unsigned char newcol)
-/* set output color */
 {
 	curcol = newcol;
 }
 
 void settextposition(unsigned char ypos, unsigned char xpos)
-/* set cursor position */
 {
 	scrpos = ypos*scrsizex+xpos;
 }
 
 void outchar(char c)
-/* write c directly into video memory */
 {
 	vptr[scrpos*2] = c;
 	vptr[scrpos*2+1] = curcol;
@@ -109,7 +110,6 @@ void outchar(char c)
 }
 
 void outtext(char *str)
-/* write str directly into video memory */
 {
 	unsigned int i;
 

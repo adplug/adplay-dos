@@ -1,63 +1,42 @@
 /*
- * window.h - Basic Textmode Windows, by Simon Peter (dn.tlp@gmx.net)
+ * window.h - Textmode window library, by Simon Peter (dn.tlp@gmx.net)
  */
 
 #ifndef H_WINDOW_DEFINED
 #define H_WINDOW_DEFINED
 
-#include <string.h>
-
-#define SCREEN_MAXX	80
-#define SCREEN_MAXY	50
-
-#define MAXCAPTION	30
 #define MAXSTRING		1024
 #define MAXITEMS		100
 #define MAXITEMSTRING	100
 #define MAXCOLORS		3
-
-#define DEFWNDSIZEX	20
-#define DEFWNDSIZEY	20
-#define DEFWNDPOSX	0
-#define DEFWNDPOSY	0
 #define DEFTXTBUFSIZE	1024
 
 class CWindow
 {
 public:
-	CWindow(unsigned char nsizex = DEFWNDSIZEX, unsigned char nsizey = DEFWNDSIZEY, unsigned char nx = DEFWNDPOSX, unsigned char ny = DEFWNDPOSY);
-	~CWindow();
-
-	void setcaption(char *newcap)					// sets new window caption
-	{ strncpy(caption,newcap,MAXCAPTION); };
-	char *getcaption()						// returns current window caption
-	{ return caption; };
-
-	void setxy(unsigned char newx, unsigned char newy)	// sets new on-screen x/y position
-	{ x = newx; y = newy; };
-	void resize(unsigned char newx, unsigned char newy);	// resizes the window
-	void centerx()							// centers the window x-wise on screen
-	{ x = (unsigned char)((SCREEN_MAXX - sizex) / 2); };
-	void centery()							// centers the window y-wise on screen
-	{ y = (unsigned char)((SCREEN_MAXY - sizey) / 2); };
-	void center()							// centers the window on screen
-	{ centerx(); centery(); };
-
 	enum Color {Border, In, Caption};
 
-	void setcolor(Color c, unsigned char v)			// sets window color
-	{ color[c] = v; };
-	unsigned char getcolor(Color c)				// returns window color
-	{ return color[c]; };
+	CWindow();
+	~CWindow();
 
-	void show(void)							// shows the window
+	void setcaption(char *newcap);				// sets new window caption
+	char *getcaption();						// returns current window caption
+
+	void out_setcolor(Color c, unsigned char v);		// sets window color
+	unsigned char out_getcolor(Color c);			// returns window color
+	void setxy(unsigned char newx, unsigned char newy);	// sets new on-screen x/y position
+	void resize(unsigned char newx, unsigned char newy);	// resizes the window
+
+	void show()								// shows the window
 	{ visible = true; };
-	void hide(void)							// hides the window
+	void hide()								// hides the window
 	{ visible = false; };
-
-	void redraw(void);						// redraws the window on screen
+	void redraw();							// redraws the window on screen
+	virtual void update()
+	{ };
 
 protected:
+	// tools
 	void puts(char *str);						// like puts(), but in the window
 	void outtext(char *str);					// outputs text, but does no linefeed
 	void outc(char c);						// outputs the char c
@@ -89,18 +68,17 @@ private:
 	unsigned char color[MAXCOLORS];
 
 	// buffers
-	char caption[MAXCAPTION+1];					// window caption
+	char *caption;							// window caption
 	char *backbuf;							// window background buffer
 };
 
 class CTxtWnd: public CWindow
 {
 public:
-	CTxtWnd(unsigned char nsizex = DEFWNDSIZEX, unsigned char nsizey = DEFWNDSIZEY, unsigned char nx = DEFWNDPOSX, unsigned char ny = DEFWNDPOSY);
+	CTxtWnd();
 	~CTxtWnd()
 	{ delete [] txtbuf; };
 
-//	void printf(char *format, ...);				// like printf(), but in the window
 	void outtext(const char *str);				// outputs text, but does no linefeed
 	void puts(const char *str)					// like puts(), but in the window
 	{ outtext(str); outtext("\n"); };
@@ -110,9 +88,8 @@ public:
 	void scroll_down(unsigned int amount = 1);
 	void scroll_up(unsigned int amount = 1);
 
-	void clear();							// clears text buffer
-
-	void redraw();
+	void erase();							// clears text buffer
+	void update();
 
 private:
 	unsigned int txtpos,bufsize,start;
@@ -122,7 +99,7 @@ private:
 class CListWnd: public CWindow
 {
 public:
-	CListWnd(unsigned char nsizex = DEFWNDSIZEX, unsigned char nsizey = DEFWNDSIZEY, unsigned char nx = DEFWNDPOSX, unsigned char ny = DEFWNDPOSY);
+	CListWnd();
 
 	unsigned int additem(char *str);
 	void removeitem(unsigned int nr);
@@ -143,12 +120,12 @@ public:
 	void scroll_up()
 	{ if(start) start--; };
 
-	enum Color {Border, In, Caption, Select, Unselect};
+	enum LColor {Select, Unselect};
 
-	void setcolor(Color c, unsigned char v);			// sets window color
-	unsigned char getcolor(Color c);				// returns window color
+	void setcolor(LColor c, unsigned char v);			// sets window color
+	unsigned char getcolor(LColor c);				// returns window color
 
-	void redraw();
+	void update();
 
 private:
 	char item[MAXITEMS][MAXITEMSTRING];
@@ -156,6 +133,29 @@ private:
 
 	unsigned int selected,start,numitems;
 	unsigned char selcol,unselcol;
+};
+
+class CBarWnd: public CWindow
+{
+public:
+	CBarWnd(unsigned int n, unsigned int nmax);
+	~CBarWnd()
+	{ delete [] bars; };
+
+	enum BColor {Bar, Clip};
+
+	void setcolor(BColor c, unsigned char v);			// sets window color
+	unsigned char getcolor(BColor c);				// returns window color
+
+	void set(unsigned int v, unsigned int n = 0);
+	unsigned int get(unsigned int n = 0)
+	{ return bars[n]; };
+
+	void update();
+
+private:
+	unsigned char 	barcol,clipcol;
+	unsigned int	*bars,nbars,max;
 };
 
 #endif
