@@ -426,7 +426,7 @@ int main(int argc, char *argv[])
 	unsigned int	opt;
 	zipfile		archive;
 
-	cout << ADPLAYVERS << ", (c) 2000 - 2001 Simon Peter (dn.tlp@gmx.net) et al." << endl << endl;
+	cout << ADPLAYVERS << ", (c) 2000 - 2001 Simon Peter <dn.tlp@gmx.net>" << endl << endl;
 
 	if(!strcmp(getenv("ADPLAY"),"S")) {
 		cout << "AdPlay already running!" << endl;
@@ -504,9 +504,8 @@ int main(int argc, char *argv[])
 	hidecursor();
 	clearscreen(backcol);
 	tmInit(poll_player,0xffff,DEFSTACK);
-	titlebar.puts(ADPLAYVERS ", (c) 2000 - 2001 by Simon Peter (dn.tlp@gmx.net) et al.");
-	titlebar.puts("Look into the README file for additional author information.");
-	titlebar.puts("This is free software under the terms and conditions of the LGPL.");
+	titlebar.puts(ADPLAYVERS ", (c) 2000 - 2001 Simon Peter <dn.tlp@gmx.net>");
+	titlebar.puts("This is free software under the terms and conditions of the Nullsoft license.");
 	songwnd.setcaption("Song Info"); instwnd.setcaption("No Instruments"); volbars.setcaption("VBars");
 	titlebar.setcaption(ADPLAYVERS); filesel.setcaption("Directory"); mastervol.setcaption("Vol");
 	listfiles(filesel);

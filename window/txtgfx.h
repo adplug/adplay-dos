@@ -65,6 +65,18 @@ void outtext(char *str);
  * str	= string to write to video memory
  */
 
+extern void wait_retrace(void);
+/* wait for vertical retrace */
+#pragma aux wait_retrace = \
+	"mov dx,03dah" \
+"nope: in al,dx" \
+	"test al,8" \
+	"jz nope" \
+"yepp: in al,dx" \
+	"test al,8" \
+	"jnz yepp" \
+	modify [al dx];
+
 #ifdef __cplusplus
 }
 #endif
