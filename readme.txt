@@ -3,7 +3,7 @@
                €    ‹€ €€    €€ €€       €€      €    ‹€    ‹€
                €     € €€‹‹‹‹‹ﬂ €€       €€‹‹‹‹‹ €     €    €€
 
-AdPlay/DOS 1.2, (c) 2001, 2002 Simon Peter <dn.tlp@gmx.net>
+AdPlay/DOS 1.3, (c) 2001, 2002 Simon Peter <dn.tlp@gmx.net>
 Website: http://adplug.sourceforge.net
 
 Description:
@@ -72,19 +72,25 @@ freely, subject to the following restrictions:
 
 Release History:
 ----------------
+- 1.3 (2002-08-01)
+  - (NO NEWS YET)
+
 - 1.2 (2002-07-30)
   - Linked with AdPlug 1.2, excluding U6M & ROL players
   - Disk drive selection support
   - Fixed ZIP file support
   - Lots of other fixes
+
 - v1.1 (2001-10-25)
   - Linked with AdPlug 1.1
   - .ZIP file reading support
+
 - v1.0 (2001-06-30)
   - AdPlay is open-source now!
   - Using PMODE/W stub
   - Linked with AdPlug 1.0 core release, excluding U6M player
   - New timer routine
   - New, customizable screen layout
+
 - v1.0 BETA (2001-02-17)
   - First beta release

@@ -1,3 +1,5 @@
 AdPlay/DOS To Do List:
 ----------------------
-- Write source build documentation
+- Fix memory leak, when loading many tunes in sequence.
+- Update Makefile to let source dist include timer and window subdirs
+- Colorize file selector

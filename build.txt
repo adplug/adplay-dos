@@ -1,0 +1,29 @@
+AdPlay/DOS Build Requirements
+-----------------------------
+To compile AdPlay/DOS from source, you need at least Watcom C/C++ 11. This
+is still a commercial compiler package, but there is ongoing effort to open
+its source and make it a free, OSI-compliant compiler suite.
+
+If you're interested in the current status of this project, please have a
+look at http://www.openwatcom.org, the official site of the project. At the
+time of this writing, beta releases of OpenWatcom are already available.
+
+AdPlay/DOS depends on the following libraries:
+
+Name:					Version:
+-----					--------
+AdPlug					>= 1.1
+WATCOM C/C++ 11.x Timer Library		>= 1.0
+WATCOM C/C++ Textmode Window Classes	>= 1.0
+
+The AdPlug library can be fetched from http://adplug.sourceforge.net. The
+other two libraries are included with the AdPlay/DOS distribution. They can
+be found in the 'timer' and 'window' subdirectories, respectively.
+
+Build Instructions
+------------------
+Please read the file INSTALL.TXT for further build instructions.
+
+--
+Simon Peter <dn.tlp@gmx.net>
+$Date$
