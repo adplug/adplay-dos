@@ -1,5 +1,5 @@
 /*
- * AdPlay - AdPlug DOS Frontend, (c) 2001 Simon Peter <dn.tlp@gmx.net>
+ * AdPlay - AdPlug DOS Frontend, (c) 2001, 2002 Simon Peter <dn.tlp@gmx.net>
  */
 
 #include <iostream.h>
@@ -14,7 +14,7 @@
 #include <env.h>
 #include <adplug\adplug.h>
 #include <adplug\analopl.h>
-#include <timer\timer.h>
+#include <timer.h>
 #include <window\txtgfx.h>
 #include <window\window.h>
 #include <window\wndman.h>

@@ -1,30 +1,34 @@
-Portable Textmode Window Classes + Console output library
-(c) 2000 - 2001 Simon Peter <dn.tlp@gmx.net>
-version 1.0
+WATCOM C/C++ Textmode Window Classes + Console Output Library
+Copyright (c) 2000 - 2002 Simon Peter <dn.tlp@gmx.net>
+Version 1.0
 
 Description
 -----------
-This package contains portable window classes especially
-designed for textmode usage + the necessary console output
-library.
+This package contains window classes especially designed for textmode usage
+and the necessary console output library. The library is WATCOM C dependant.
 
 Window Classes
 --------------
 For the moment, there are the following window classes:
 CWindow	: Basic framed window w/o any behaviours
-CTxtWnd	: Window that contains text
-CListWnd	: Listbox that can have one item selected
+CTxtWnd : Window that contains text
+CListWnd: Listbox that can have one item selected
 CBarWnd	: Window containing vertical bar(s)
 
 The classes can be inherited to extend their functionality.
 
-Output Library
---------------
-The output library provides hardware console output and some
-special features, like cursor on/off, clear screen and video
-mode selection.
+There is also a window manager class called CWndMan. It has the ability to
+set custom colors to its managed windows and to redraw all managed windows
+at once.
 
-The library is WATCOM C dependant.
+Console Output Library
+----------------------
+The output library provides hardware console output and some special
+features, like cursor on/off, clear screen and video mode selection.
+
+Building
+--------
+Please read the file INSTALL.TXT for build instructions!
 
 Legal
 -----

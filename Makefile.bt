@@ -1,0 +1,16 @@
+# AdPlay/DOS Makefile for WATCOM C/C++ 11.x
+# Copyright (c) 2001, 2002 Simon Peter <dn.tlp@gmx.net>
+
+LDFLAGS = OP ST=32k
+CPPFLAGS = -dstd= -dstring=String	# trick std::string into WATCOM's String()
+
+OUTPUT = adplay.exe
+LIBRARIES = window.lib timer.lib adplug.lib
+OBJS = adplay.obj cfgparse.obj arcfile.obj
+DIST = adplay.cpp adplay.ini arcfile.cpp arcfile.h cfgparse.cpp cfgparse.h &
+readme.txt
+BINARYDIST = adplay.exe adplay.ini readme.txt
+SYSTEM = pmodew
+
+distfile = adply12s.zip
+binarydistfile = adplay12.zip
