@@ -148,7 +148,7 @@ freely, subject to the following restrictions:
 
 Release History:
 ----------------
-- 1.5 (2004-09-28)
+- 1.5 (2004-09-30)
   - Songs can now be stopped or forcibly rewound when they end.
   - Added the '-q' option for batch mode playback.
 

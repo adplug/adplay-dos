@@ -1,5 +1,5 @@
-# AdPlay/DOS Makefile for WATCOM C/C++ 11.x
-# Copyright (c) 2001, 2002 Simon Peter <dn.tlp@gmx.net>
+# AdPlay/DOS Makefile for WATCOM C/C++ 11.x and OpenWatcom
+# Copyright (c) 2001 - 2004 Simon Peter <dn.tlp@gmx.net>
 
 LDFLAGS = OP ST=32k
 
@@ -10,10 +10,10 @@ LIBRARIES = window.lib timer.lib adplug.lib binio.lib
 OBJS = adplay.obj cfgparse.obj arcfile.obj filewnd.obj
 
 ##### Source distribution #####
-distfile = adply14s.zip
+distfile = adply15s.zip
 DIST = adplay.cpp adplay.ini arcfile.cpp arcfile.h cfgparse.cpp cfgparse.h &
 readme.txt filewnd.cpp filewnd.h TODO build.txt helptxt.h
 
 ##### Binary distribution #####
-binarydistfile = adplay14.zip
+binarydistfile = adplay15.zip
 BINARYDIST = adplay.exe adplay.ini readme.txt
