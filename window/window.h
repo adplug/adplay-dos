@@ -25,6 +25,7 @@ public:
 	void out_setcolor(Color c, unsigned char v);		// sets window color
 	unsigned char out_getcolor(Color c);			// returns window color
 
+        void center();  // center window on screen
 	void setxy(unsigned char newx, unsigned char newy);	// sets new on-screen x/y position
 	unsigned char posx()
 	{ return x; };

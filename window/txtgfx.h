@@ -12,6 +12,12 @@
 extern "C" {
 #endif
 
+/* This struct holds all necessary information to outline a video mode */
+typedef struct {
+        unsigned char   mode,rows,curstart,curend;
+        unsigned short  cols,font;
+} VideoInfo;
+
 void clearscreen(unsigned char col);
 /* clear screen with given color and reset cursor position
  *
@@ -32,7 +38,18 @@ void setvideomode(unsigned char mode);
  */
 
 void load88font(void);
-/* load & activate VGA 8x8 font (enables 50 rows) */
+void load816font(void);
+/* load & activate VGA 8x8 or 8x16 fonts (sets 50 or 25 rows) */
+
+void setcursorsize(unsigned char start, unsigned char end);
+/* Set hardware cursor size
+ *
+ * start = start row of "white" area
+ * end = end row of "white" area
+ */
+
+void getcursorsize(unsigned char *start, unsigned char *end);
+/* Returns current cursor size in start and end */
 
 void showcursor(void);
 /* show hardware cursor on screen */
@@ -69,13 +86,24 @@ extern void wait_retrace(void);
 /* wait for vertical retrace */
 #pragma aux wait_retrace = \
 	"mov dx,03dah" \
-"nope: in al,dx" \
+  "nope: in al,dx" \
 	"test al,8" \
 	"jz nope" \
-"yepp: in al,dx" \
+  "yepp: in al,dx" \
 	"test al,8" \
 	"jnz yepp" \
 	modify [al dx];
+
+VideoInfo *getvideoinfo(VideoInfo *vi);
+void setvideoinfo(VideoInfo *vi);
+/* Get and set video information, using the VideoInfo structure */
+
+void save_video(void);
+void restore_video(void);
+/* You can save and restore a previous video state with these functions.
+ * Use this for example on start and end of your program to restore the
+ * user's video state, when returning to DOS.
+ */
 
 #ifdef __cplusplus
 }

@@ -2,6 +2,7 @@
  * window.cpp - Textmode window library, by Simon Peter (dn.tlp@gmx.net)
  */
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -38,6 +39,16 @@ void CWindow::setcaption(char *newcap)
 char *CWindow::getcaption()
 {
 	return caption;
+}
+
+void CWindow::center()
+{
+        VideoInfo *vi = (VideoInfo *)malloc(sizeof(VideoInfo));
+
+        getvideoinfo(vi);
+        setxy((vi->cols - getsizex()) / 2,(vi->rows - getsizey()) / 2);
+
+        free(vi);
 }
 
 void CWindow::setxy(unsigned char newx, unsigned char newy)
@@ -335,28 +346,30 @@ CBarWnd::CBarWnd(unsigned int n, unsigned int nmax)
 
 void CBarWnd::update()
 {
-	unsigned int i;
+        unsigned int i,j,k;
 
+        // set colormap
 	for(i=0;i<insizex*insizey;i++)
 		if(i<(insizey/4)*insizex)
 			colmap[i] = clipcol;
 		else
 			colmap[i] = barcol;
-	redraw();
-}
 
-void CBarWnd::set(unsigned int v, unsigned int n)
-{
-	unsigned int i,j,k;
-
+        // draw bars
 	memset(wndbuf,' ',insizex*insizey);
-	bars[n] = v;
 	for(i=0;i<nbars;i++)
 		for(j=0;j<=(insizey*bars[i])/max;j++) {
 			setcursor((insizex*i)/nbars,insizey-j);
 			for(k=0;k<insizex/nbars;k++)
 				outc('=');
 		}
+
+	redraw();
+}
+
+void CBarWnd::set(unsigned int v, unsigned int n)
+{
+	bars[n] = v;
 }
 
 void CBarWnd::setcolor(BColor c, unsigned char v)

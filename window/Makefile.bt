@@ -1,6 +1,8 @@
 # WATCOM C/C++ Window Classes + Console Output Library 1.0 Makefile
 # Copyright (c) 2000 - 2002 Simon Peter <dn.tlp@gmx.net>
 
+CFLAGS = -wcd=101
+
 OUTPUT = window.lib
 OBJS = txtgfx.obj window.obj wndman.obj
 DIST = txtgfx.c txtgfx.h window.cpp window.h wndman.cpp wndman.h readme.txt

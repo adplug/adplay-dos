@@ -72,11 +72,11 @@ freely, subject to the following restrictions:
 
 Release History:
 ----------------
-- 1.2 (2002-07-27)
+- 1.2 (2002-07-30)
   - Linked with AdPlug 1.2, excluding U6M & ROL players
   - Disk drive selection support
   - Fixed ZIP file support
-  - Lots of fixes
+  - Lots of other fixes
 - v1.1 (2001-10-25)
   - Linked with AdPlug 1.1
   - .ZIP file reading support
