@@ -2,3 +2,10 @@ AdPlay/DOS To Do List:
 ----------------------
 - Add ARJ and RAR archive reading support.
 - Add fancy screensaver feature. [dynamite]
+- Sort filenames first by extension and then by name.
+- Display supported filetypes in a different color.
+- If an unsupported filetype is selected, display error
+  but don't stop the already playing song.
+- Display total song length in song info box.
+- Also use WINDIR variable to search for COMMAND.COM on
+  shell to DOS.
