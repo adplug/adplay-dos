@@ -6,7 +6,7 @@ LDFLAGS = OP ST=32k
 OUTPUT = adplay.exe
 SYSTEM = pmodew
 
-LIBRARIES = window.lib timer.lib adplug.lib
+LIBRARIES = window.lib timer.lib adplug.lib binio.lib
 OBJS = adplay.obj cfgparse.obj arcfile.obj filewnd.obj
 
 ##### Source distribution #####
