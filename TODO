@@ -6,3 +6,6 @@ AdPlay/DOS To Do List:
 - Add an option to reset the playing time on song loop.
 - Add support for seeking backwards.
 - Add a window for specifying an exact position to seek to.
+- Check if AdPlay crashes with 'Stack overflow' on wrong ini files.
+- Fix AdPlay not going back to program directory on exten, when a
+  drive change was committed earlier.

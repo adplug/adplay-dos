@@ -141,6 +141,9 @@ freely, subject to the following restrictions:
 
 Release History:
 ----------------
+- 1.5 (2003-03-19)
+  - No changes yet.
+
 - 1.4 (2003-03-18)
   - Linked with AdPlug 1.4
   - File selector can now group files by extension, as an option.
