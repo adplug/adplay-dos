@@ -3,7 +3,7 @@
                €    ‹€ €€    €€ €€       €€      €    ‹€    ‹€
                €     € €€‹‹‹‹‹ﬂ €€       €€‹‹‹‹‹ €     €    €€
 
-AdPlay/DOS 1.5, Copyright (c) 2000 - 2003 Simon Peter <dn.tlp@gmx.net>
+AdPlay/DOS 1.5, Copyright (c) 2000 - 2004 Simon Peter <dn.tlp@gmx.net>
 Website: http://adplug.sourceforge.net
 
 Description:
@@ -36,6 +36,7 @@ may contain many replay issues, but are included for testing purposes anyway.
   - Bugs: Hard restart SR sometimes sound wrong
 - DFM: Digital-FM by R.Verhaag
 - DMO: Twin TrackPlayer by TwinTeam
+- DRO: DOSBox Raw OPL
 - DTM: DeFy Adlib Tracker by DeFy
 - HSC: HSC Adlib Composer by Hannes Seifert, HSC-Tracker by Electronic Rats
 - HSP: HSC Packed by Number Six / Aegis Corp.
@@ -44,8 +45,7 @@ may contain many replay issues, but are included for testing purposes anyway.
   - Needs file 'insts.dat' in the same directory as loaded file
 - LAA: LucasArts AdLib Audio File Format by LucasArts
   - Bugs: Some volumes are a bit off
-- LDS: LOUDNESS Music Format (preliminary)
-  - Bugs: Undocumented format, more to come.
+- LDS: LOUDNESS Sound System
 - M: Ultima 6 Music Format by Origin
 - MAD: Mlat Adlib Tracker
 - MID: MIDI Audio File Format
@@ -71,6 +71,7 @@ may contain many replay issues, but are included for testing purposes anyway.
 - SNG: Adlib Tracker 1.0 by TJ
 - XAD: eXotic ADlib Format by Riven the Mage
 - XMS: XMS-Tracker by MaDoKaN/E.S.G
+- XSM: eXtra Simple Music by Davey W Taylor
 
 Usage:
 ------
@@ -80,10 +81,16 @@ within a graphical user interface. Select files using the Up/Down cursor keys
 and press enter to start playback. F1 will bring up a help window, explaining
 all other available key functions.
 
-You can also invoke AdPlay in the so called batch mode, which will turn it
-into a console background playback utility. Use the '-b <file>' commandline
+It is possible to invoke AdPlay in background playback mode, which will turn
+it into a console background playback utility. Use the '-b <file>' commandline
 parameter to start AdPlay in this way, replacing <file> with the desired file
 to be played back.
+
+You can also invoke AdPlay in the so called batch mode. This turns it into a
+console playback utility where each file will be played back until it ends.
+After the last file has been played back, the program will exit. Use the
+'-q <files...>' option to start AdPlay in this way, giving it as many files
+as you like.
 
 Other interesting parameters are the '-f' and '-c' options, which will load
 another configuration file and/or section. You can stack up as many of these
@@ -141,8 +148,9 @@ freely, subject to the following restrictions:
 
 Release History:
 ----------------
-- 1.5 (2003-03-28)
+- 1.5 (2004-09-28)
   - Songs can now be stopped or forcibly rewound when they end.
+  - Added the '-q' option for batch mode playback.
 
 - 1.4 (2003-03-18)
   - Linked with AdPlug 1.4

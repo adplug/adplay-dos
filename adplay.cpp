@@ -1,6 +1,6 @@
 /*
  * AdPlay/DOS - AdPlug DOS Frontend
- * Copyright (c) 2001 - 2003 Simon Peter <dn.tlp@gmx.net>
+ * Copyright (c) 2001 - 2004 Simon Peter <dn.tlp@gmx.net>
  *
  * This software is provided 'as-is', without any express or implied
  * warranty.  In no event will the authors be held liable for any damages
@@ -69,7 +69,7 @@ static unsigned int subsong,optind=1;
 static bool hivideo=true,oplforce=false;         // Configuration
 static volatile float time_ms=0.0f;              // Current playing time in ms
 static unsigned long totaltime = 0;              // Total time of current subsong
-static const char *optstr = "h?pofcb";           // Commandline options
+static const char *optstr = "h?pofcbq";          // Commandline options
 static char configfile[PATH_MAX];                // Path to configfile
 static VideoInfo dosvideo;                       // Stores previous (DOS's) video settings
 static int volume=0;                             // Main volume
@@ -509,7 +509,7 @@ static void reset_windows()
         unsigned int i;
 
         titlebar.erase();
-        titlebar.format(ADPLAYVERS ", Copyright (c) 2000 - 2003 Simon Peter <dn.tlp@gmx.net>\n"
+        titlebar.format(ADPLAYVERS ", Copyright (c) 2000 - 2004 Simon Peter <dn.tlp@gmx.net>\n"
                 "This is free software under the terms and conditions of the Nullsoft license.\n"
                 "Refer to the file README.TXT for more information.");
         instwnd.setcaption("No Instruments"); instwnd.erase();
@@ -663,15 +663,15 @@ static void window_cycle(bool backward = false)
 int main(int argc, char *argv[])
 {
         char            inkey=0, *prgdir, *curdir, *program_name;
-        bool            ext, validcfg, quit = false, bkgply = false;
-	unsigned int	opt, prgdrive;
+        bool            ext, validcfg, quit = false, bkgply = false, batchply = false;
+	unsigned int	opt, prgdrive, i;
         CWindow         *focus;
 
 #ifdef DEBUG
         f_log = fopen(DEBUG_FILE,"wt");
 #endif
 
-        cout << ADPLAYVERS << ", Copyright (c) 2000 - 2003 Simon Peter <dn.tlp@gmx.net>" << endl << endl;
+        cout << ADPLAYVERS << ", Copyright (c) 2000 - 2004 Simon Peter <dn.tlp@gmx.net>" << endl << endl;
 
         // check that no other instance is running
 	if(!strcmp(getenv("ADPLAY"),"S")) {
@@ -702,7 +702,10 @@ int main(int argc, char *argv[])
 				  " -o          Force OPL2 port" << endl <<
 				  " -f file     Use alternate configuration file" << endl <<
 				  " -c section  Load another configuration section" << endl <<
-				  " -b file     Immediate background playback using specified file" << endl;
+				  " -b file     Immediate background playback using " <<
+				  	"specified file" << endl <<
+				  " -q files    Immediate (batch mode) playback using " <<
+					"specified files" << endl;
 			showcursor();
                         exit(EXIT_SUCCESS);
 		case 3:	// set OPL2 port
@@ -714,9 +717,12 @@ int main(int argc, char *argv[])
 		case 7:	// background playback
                         bkgply = true;
                         break;
+		case 8: // batch mode playback
+			batchply = true;
+			break;
                 }
 
-        // Bail out if OPL2 not detected and not forced
+        // Bail out if OPL2 not detected and not force
 	if(!opl.detect() && !oplforce) {
 		cout << "No OPL2 detected!" << endl;
 		showcursor();
@@ -734,12 +740,34 @@ int main(int argc, char *argv[])
                 } else {
                         cout << "Background playback... (type EXIT to stop)" << endl;
                         tmInit(poll_player,0xffff,DEFSTACK);
+			dopoll = true;
                         _heapshrink();
                         system(getenv("COMSPEC"));
                         tmClose();
                         stop();
                         exit(EXIT_SUCCESS);
                 }
+
+	/*** Batch playback mode ***/
+	if(batchply) {
+		tmInit(poll_player,0xffff,DEFSTACK);
+
+		for(i = optind; i < argc; i++)
+	                if(!(p = CAdPlug::factory(argv[i],&opl))) {
+	                        cout << "[" << argv[i] << "]: unsupported file type!" << endl;
+				tmClose();
+	                        exit(EXIT_FAILURE);
+	                } else {
+				dopoll = firsttime = true;
+	                        cout << "Playing [" << argv[i] << "] ..." << endl;
+				while(firsttime) ;	// busy waiting
+	                        stop();
+				dopoll = false;
+	                }
+
+		tmClose();
+		exit(EXIT_SUCCESS);
+	}
 
         /*** interactive (GUI) mode ***/
         getvideoinfo(&dosvideo);        // Save previous video state
