@@ -85,6 +85,9 @@ Known Problems:
 ---------------
 Returning from a DOS shell in a Windows 95 DOS Box will destroy the sound.
 
+Shelling to DOS while playing back with high timer rates can crash the
+player while within real DOS.
+
 Legal:
 ------
 AdPlay is released under the terms and conditions of the LGPL. A recent copy
