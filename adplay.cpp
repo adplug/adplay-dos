@@ -1,6 +1,6 @@
 /*
  * AdPlay/DOS - AdPlug DOS Frontend
- * Copyright (c) 2001, 2002 Simon Peter <dn.tlp@gmx.net>
+ * Copyright (c) 2001 - 2003 Simon Peter <dn.tlp@gmx.net>
  *
  * This software is provided 'as-is', without any express or implied
  * warranty.  In no event will the authors be held liable for any damages
@@ -53,9 +53,11 @@
 #define CONFIG_VARS     "Background\0AdlibPort\0PosX\0PosY\0SizeX\0SizeY\0" \
         "ColBorder\0ColCaption\0ColIn\0ColSelect\0ColUnselect\0ColBar\0" \
         "ColClip\0HighRes\0Force\0ColFileSel\0ColFileUnsel\0ColDirSel\0" \
-        "ColDirUnsel\0ColDriveSel\0ColDriveUnsel\0Section\0ColFocus\0"
+        "ColDirUnsel\0ColDriveSel\0ColDriveUnsel\0Section\0ColFocus\0" \
+	"Database\0"
 
 // global variables
+CAdPlugDatabase mydb;			  // Global Database instance
 CAnalopl opl;                             // The only output device
 CPlayer *p=0;                             // Main player (0 = none loaded)
 CWndMan wnds;                             // Window manager
@@ -235,6 +237,7 @@ bool loadconfig(const char *fn, const char *section)
                 switch(cp.peekvar()) {
                 case 1: opl.setport(cp.readlong()); break;
                 case 14: oplforce = cp.readbool(); break;
+		case 23: mydb.load(cp.readstr()); break;
 		}
         } while(!cp.geterror());
 
@@ -615,8 +618,8 @@ void window_cycle(bool backward = false)
 
 int main(int argc, char *argv[])
 {
-        char            inkey=0,*prgdir,*curdir;
-        bool            ext,validcfg,quit=false,bkgply=false;
+        char            inkey=0, *prgdir, *curdir, *program_name;
+        bool            ext, validcfg, quit = false, bkgply = false;
 	unsigned int	opt;
         CWindow         *focus;
 
@@ -624,14 +627,17 @@ int main(int argc, char *argv[])
         f_log = fopen(DEBUG_FILE,"wt");
 #endif
 
-        cout << ADPLAYVERS << ", Copyright (c) 2000 - 2002 Simon Peter <dn.tlp@gmx.net>" << endl << endl;
+        cout << ADPLAYVERS << ", Copyright (c) 2000 - 2003 Simon Peter <dn.tlp@gmx.net>" << endl << endl;
 
         // check that no other instance is running
 	if(!strcmp(getenv("ADPLAY"),"S")) {
 		cout << "AdPlay already running!" << endl;
-                exit(1);
+                exit(EXIT_FAILURE);
 	} else
                 setenv("ADPLAY","S",1); // flag our instance
+
+	// Build program executable name
+	program_name = strrchr(argv[0], '\\') ? strrchr(argv[0], '\\') + 1 : argv[0];
 
         CAdPlug::debug_output("debug.log"); // Redirect AdPlug's debug to file
         // Build path to default configuration file (in program's directory)
@@ -645,7 +651,7 @@ int main(int argc, char *argv[])
 		switch(opt) {
 		case 1:	// display help
 		case 2:
-                        cout << "Usage: " << argv[0] << " [options]" << endl << endl;
+                        cout << "Usage: " << program_name << " [options]" << endl << endl;
 			cout << "Options can be set with '-' or '/' respectively." << endl << endl;
 			cout << " -?, -h      Display commandline help" << endl <<
 				  " -p port     Set OPL2 port" << endl <<
@@ -654,7 +660,7 @@ int main(int argc, char *argv[])
 				  " -c section  Load another configuration section" << endl <<
 				  " -b file     Immediate background playback using specified file" << endl;
 			showcursor();
-                        exit(0);
+                        exit(EXIT_SUCCESS);
 		case 3:	// set OPL2 port
 			opl.setport(atoi(argv[optind++]));
 			break;
@@ -670,14 +676,17 @@ int main(int argc, char *argv[])
 	if(!opl.detect() && !oplforce) {
 		cout << "No OPL2 detected!" << endl;
 		showcursor();
-                exit(1);
+                exit(EXIT_FAILURE);
 	}
+
+	// Hand our database to AdPlug
+	CAdPlug::set_database(&mydb);
 
         /*** Background playback mode ***/
         if(bkgply)
                 if(!(p = CAdPlug::factory(argv[optind],&opl))) {
                         cout << "[" << argv[optind] << "]: unsupported file type!" << endl;
-                        exit(1);
+                        exit(EXIT_FAILURE);
                 } else {
                         cout << "Background playback... (type EXIT to stop)" << endl;
                         tmInit(poll_player,0xffff,DEFSTACK);
@@ -685,7 +694,7 @@ int main(int argc, char *argv[])
                         system(getenv("COMSPEC"));
                         tmClose();
                         stop();
-                        exit(0);
+                        exit(EXIT_SUCCESS);
                 }
 
         /*** interactive (GUI) mode ***/
@@ -716,7 +725,7 @@ int main(int argc, char *argv[])
         // bail out if no configfile could be loaded
         if(!validcfg) {
                 cout << "No valid default GUI layout could be loaded!" << endl;
-                exit(1);
+                exit(EXIT_FAILURE);
         }
 
         // init GUI
@@ -905,5 +914,5 @@ int main(int argc, char *argv[])
         dbg_printf("main(): clean shutdown.\n");
         fclose(f_log);
 #endif
-        return 0;
+        return EXIT_SUCCESS;
 }
