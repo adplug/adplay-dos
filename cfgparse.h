@@ -30,6 +30,7 @@ public:
 	unsigned int readuint();
 	char *readstr(char *val);
 	char readchar();
+	bool readbool();
 
 private:
 	ifstream		cf;

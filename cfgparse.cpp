@@ -11,6 +11,8 @@
 CfgParse::CfgParse(char *cfgfile)
 	: cf(cfgfile, ios::in | ios::nocreate), delim('\n'), varlist(0), err(ERR_NONE)
 {
+	if(!cf.is_open())
+		err = ERR_NOTFOUND;
 }
 
 CfgParse::~CfgParse()
@@ -139,6 +141,17 @@ char CfgParse::readchar()
 
 	cf >> val;
 	return val;
+}
+
+bool CfgParse::readbool()
+{
+	char val[MAXINILINE];
+
+	cf >> val;
+	if(!strcmp(val,"Yes") || !strcmp(val,"True"))
+		return true;
+	else
+		return false;
 }
 
 unsigned int CfgParse::geterror()

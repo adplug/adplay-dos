@@ -36,9 +36,11 @@ CTxtWnd			titlebar,infownd,songwnd,instwnd;
 CListWnd			filesel;
 CBarWnd			volbars(9,63),mastervol(1,63);
 unsigned char		backcol=7,colIn=7,colBorder=7,colCaption=7,colSelect=0x70,colUnselect=7;
-unsigned int		subsong;
-bool				hivideo=true;
+unsigned int		subsong,optind=1;
+bool				hivideo=true,oplforce=false;
 volatile unsigned int	time_ms;
+char				*optstr = "h?pofcb";
+char				*configfile = new char[13];
 
 extern void wait_retrace(void);
 #pragma aux wait_retrace = \
@@ -175,16 +177,22 @@ void read_stdwnd(CfgParse &cp, char *subsec, CWindow &w)
 		}
 }
 
-void loadcolors(char *fn, char *section)
+bool loadcolors(char *fn, char *section)
 {
 	CfgParse		cp(fn);
 	unsigned int	var;
 	unsigned int 	val;
 	char			str[MAXINILINE];
 
+	if(cp.geterror() == ERR_NOTFOUND)
+		return false;
+
 	cp.enum_vars("Background\0AdlibPort\0PosX\0PosY\0SizeX\0SizeY\0ColBorder\0ColCaption\0ColIn\0ColSelect\0"
-			 "ColUnselect\0ColBar\0ColClip\0HighRes\0");
-	cp.section(section);
+			 "ColUnselect\0ColBar\0ColClip\0HighRes\0Force\0");
+
+	if(!cp.section(section))
+		return false;
+
 	while((var = cp.peekvar()) != cp.nitems() + 1)
 		switch(var) {
 		case 0: backcol = cp.readint(); break;
@@ -205,7 +213,7 @@ void loadcolors(char *fn, char *section)
 			mastervol.setcolor(mastervol.Clip,val);
 			break;
 		case 13:
-			if(!strcmp(cp.readstr(str),"Yes")) {
+			if(cp.readbool()) {
 				hivideo = true;
 				load88font();
 				hidecursor();
@@ -214,6 +222,13 @@ void loadcolors(char *fn, char *section)
 				setvideomode(3);
 				hidecursor();
 			}
+			break;
+		case 14:
+			if(cp.readbool())
+				oplforce = true;
+			else
+				oplforce = false;
+			break;
 		}
 
 	read_stdwnd(cp,"titlebar",titlebar);
@@ -262,6 +277,7 @@ void loadcolors(char *fn, char *section)
 			case 11: mastervol.setcolor(mastervol.Bar,cp.readint()); break;
 			case 12: mastervol.setcolor(mastervol.Clip,cp.readint()); break;
 			}
+	return true;
 }
 
 void select_colors()
@@ -278,7 +294,7 @@ void select_colors()
 	colwnd.setcolor(colwnd.Select,colSelect);
 	colwnd.setcolor(colwnd.Unselect,colUnselect);
 	window_center(colwnd);
-	listcolors(CONFIGFILE,colwnd);
+	listcolors(configfile,colwnd);
 	colwnd.update();
 
 	do {
@@ -305,7 +321,7 @@ void select_colors()
 		else		// handle all normal keys
 			switch(inkey) {
 			case 13:	// [Return] - select layout
-				loadcolors(CONFIGFILE,colwnd.getitem(colwnd.getselection()));
+				loadcolors(configfile,colwnd.getitem(colwnd.getselection()));
 				break;
 			}
 	} while(inkey != 27 && inkey != 13);	// [ESC] - Exit menu
@@ -349,45 +365,100 @@ void refresh_volbars(CBarWnd &w, CAnalopl &opl)
 	w.update();
 }
 
+unsigned int getopt(int n, char **s)
+{
+	unsigned int	i;
+
+	if(optind >= n)
+		return 0;
+
+	for(i=0;i<strlen(optstr);i++) {
+		if(s[optind][0] != '-' && s[optind][0] != '/') return 0;
+		if(optstr[i] == s[optind][1]) break;
+	}
+	optind++;
+	return (i+1);
+}
+
 int main(int argc, char *argv[])
 {
 	CAdPlug		ap;
 	char			inkey=0,*prgdir,*curdir;
 	bool			ext;
 	unsigned char	volume=0;
+	unsigned int	opt;
 
 	cout << ADPLAYVERS << ", (c) 2000 - 2001 Simon Peter (dn.tlp@gmx.net) et al." << endl << endl;
 
 	if(!strcmp(getenv("ADPLAY"),"S")) {
 		cout << "AdPlay already running!" << endl;
 		return 3;
-	}
+	} else
+		setenv("ADPLAY","S",1);
 
 	// init
 	wnds.reg(titlebar); wnds.reg(filesel); wnds.reg(songwnd); wnds.reg(instwnd); wnds.reg(volbars);
 	wnds.reg(mastervol); wnds.reg(infownd);
-	loadcolors(CONFIGFILE,DEFCONFIG);	// load default config
+	strcpy(configfile,CONFIGFILE); loadcolors(CONFIGFILE,DEFCONFIG);	// load default config
 
-/*	if(!opl.detect()) {
-		cout << "No OPL2 detected!" << endl;
-		return 2;
-	} */
-
-	setenv("ADPLAY","S",1);
-	if(argc > 1)	// commandline playback
-		if(!(p = ap.factory(argv[1],&opl))) {
-			cout << "[" << argv[1] << "]: unsupported file type!" << endl;
-			return 1;
-		} else {
-			cout << "Background playback... (type EXIT to stop)" << endl;
-			tmInit(poll_player,0xffff,DEFSTACK);
-			_heapshrink();
-			system(getenv("COMSPEC"));
-			tmClose();
-			delete p;
-			opl.init();
+	// read commandline
+	while(opt = getopt(argc,argv))
+		switch(opt) {
+		case 1:	// display help
+		case 2:
+			cout << "Options can be set with '-' or '/' respectively." << endl << endl;
+			cout << " -?, -h      Display commandline help" << endl <<
+				  " -p port     Set OPL2 port" << endl <<
+				  " -o          Force OPL2 port" << endl <<
+				  " -f file     Use alternate configuration file" << endl <<
+				  " -c section  Load another configuration section" << endl <<
+				  " -b file     Immediate background playback using specified file" << endl;
+			showcursor();
 			return 0;
+		case 3:	// set OPL2 port
+			opl.setport(atoi(argv[optind++]));
+			break;
+		case 4:	// force OPL2 flag
+			oplforce = true;
+			break;
+		case 5:	// set config file
+			delete [] configfile;
+			configfile = new char [strlen(argv[optind])+1];
+			strcpy(configfile,argv[optind++]);
+			loadcolors(configfile,DEFCONFIG);
+			break;
+		case 6:	// load config section
+			loadcolors(configfile,argv[optind++]);
+			break;
+		case 7:	// background playback
+			if(!opl.detect() && !oplforce) {
+				cout << "No OPL2 detected!" << endl;
+				showcursor();
+				return 2;
+			}
+
+			if(!(p = ap.factory(argv[optind],&opl))) {
+				cout << "[" << argv[optind] << "]: unsupported file type!" << endl;
+				return 1;
+			} else {
+				cout << "Background playback... (type EXIT to stop)" << endl;
+				tmInit(poll_player,0xffff,DEFSTACK);
+				_heapshrink();
+				showcursor();
+				system(getenv("COMSPEC"));
+				tmClose();
+				delete p;
+				opl.init();
+				return 0;
+			}
+			break;
 		}
+
+	if(!opl.detect() && !oplforce) {
+		cout << "No OPL2 detected!" << endl;
+		showcursor();
+		return 2;
+	}
 
 	// interactive mode
 	prgdir = getcwd(NULL,0);

@@ -71,11 +71,7 @@ works like any other standard Microsoft INI file.
 
 Known Problems:
 ---------------
-In a Windows 95 DOS Box, there are multiple problems with AdPlay and it
-is discouraged to use AdPlay from within Windows - Windows users should
-retain to an AdPlug Windows frontend instead. Particulary, it is known
-that returning from a DOS Shell will destroy the sound while within a
-Windows 95 DOS Box.
+Returning from a DOS shell in a Windows 95 DOS Box will destroy the sound.
 
 Legal:
 ------
