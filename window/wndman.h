@@ -1,6 +1,26 @@
 /*
- * wndman.h - Simple window manager, by Simon Peter (dn.tlp@gmx.net)
+ * wndman.h - Simple window manager
+ * Copyright (c) 2001, 2002 Simon Peter <dn.tlp@gmx.net>
+ *
+ * This software is provided 'as-is', without any express or implied
+ * warranty.  In no event will the authors be held liable for any damages
+ * arising from the use of this software.
+ *
+ * Permission is granted to anyone to use this software for any purpose,
+ * including commercial applications, and to alter it and redistribute it
+ * freely, subject to the following restrictions:
+ *
+ * 1. The origin of this software must not be misrepresented; you must not
+ *    claim that you wrote the original software. If you use this software
+ *    in a product, an acknowledgment in the product documentation would be
+ *    appreciated but is not required.
+ * 2. Altered source versions must be plainly marked as such, and must not be
+ *    misrepresented as being the original software.
+ * 3. This notice may not be removed or altered from any source distribution.
  */
+
+#ifndef H_WNDMAN_DEFINED
+#define H_WNDMAN_DEFINED
 
 #include "window.h"
 
@@ -10,11 +30,10 @@ public:
 	CWndMan();
 	~CWndMan();
 
-	bool reg(CWindow &nwnd);					// registers a window
-	void unreg(CWindow &nwnd);					// unregisters a window
+        bool reg(CWindow &nwnd);        // registers a window
+        void unreg(CWindow &nwnd);      // unregisters a window
 
-	void setcolor(CWindow::Color c, unsigned char v);	// sets all windows' colors
-	void update();							// redraws all managed windows
+        void update();                  // redraws all managed windows
 
 private:
 	struct window {
@@ -22,3 +41,5 @@ private:
 		window	*next;
 	} *w;
 };
+
+#endif

@@ -29,8 +29,12 @@
 #include "filewnd.h"
 #include "arcfile.h"
 
+#define MAXFCOLORS      6
+
+static unsigned char FileWnd::fc[MAXFCOLORS] = {0x70,7,0x70,7,0x70,7};
+
 FileWnd::FileWnd()
-        : CListWnd(), arcmode(0), err(None), items(0)
+        : CListWnd(), arcmode(0), err(None)
 {
         *dirprefix = '\0';
 }
@@ -39,13 +43,22 @@ FileWnd::~FileWnd()
 {
 }
 
+void FileWnd::setfilecolor(FColor c, unsigned char v)
+{
+        fc[c] = v;
+}
+
 void FileWnd::refresh()
 {
-        err = None;
-        selectitem(0); removeall(); // clear list
-        additem(".."); items = 1; attrs[0] = Directory;
-        if(arcmode) listarc(arc); else listfiles();
+        FileItem *item = new FileItem;
+
+        err = None; removeall();        // clear list
         listdrives();
+        if(arcmode) listarc(arc); else listfiles();
+        item->settext(".."); item->attr = FileItem::Directory;
+        item->setcolor(Item::Selected,fc[DirSel]);
+        item->setcolor(Item::Unselected,fc[DirUnsel]);
+        additem(item);
 }
 
 FileWnd::Error FileWnd::geterror()
@@ -57,10 +70,10 @@ char *FileWnd::getfilename(char *fn)
 {
         err = None;
         if(!arcmode || !(*dirprefix))
-                strcpy(fn,getitem(getselection()));
+                strcpy(fn,getselection()->gettext());
         else {
                 strcpy(fn,dirprefix);
-                strcat(fn,getitem(getselection()));
+                strcat(fn,getselection()->gettext());
         }
 
         return fn;
@@ -73,12 +86,13 @@ bool FileWnd::select()
 {
         unsigned int dummy,drive;
         struct diskfree_t dummy2;
-        char *fname = getitem(getselection());
+        FileItem *f = (FileItem *)getselection();
+        char *fname = f->gettext();
 
         err = None;
 
         // Disk drive selected?
-        if(attrs[getselection()] == Drive && (drive = drivenum(fname)))
+        if(f->attr == FileItem::Drive && (drive = drivenum(fname)))
                 // Try to switch to drive
                 if(!_dos_getdiskfree(drive,&dummy2)) {
                         _dos_setdrive(drive,&dummy);
@@ -105,7 +119,7 @@ bool FileWnd::select()
                 }
 
                 // Directory within archive selected?
-                if(attrs[getselection()] == Directory) {
+                if(f->attr == FileItem::Directory) {
                         strcat(dirprefix,fname);
                         strcat(dirprefix,"/");
                         return false;
@@ -116,7 +130,7 @@ bool FileWnd::select()
         }
 
         // If directory selected, switch to it
-        if(attrs[getselection()] == Directory) {
+        if(f->attr == FileItem::Directory) {
                 chdir(fname);
                 return false;
         }
@@ -144,45 +158,87 @@ archive *FileWnd::getarchive()
 
 void FileWnd::listfiles()
 /* Takes a CListWnd and rebuilds it with a filelist of the current
- * working directory, plus it puts the drive names at last.
+ * working directory.
  */
 {
 	DIR *dirp,*direntp;
         char *wd;
+        FileItem *f;
 
         // add files and directories
 	wd = getcwd(NULL,0);
 	dirp = opendir(wd);
+	while(direntp = readdir(dirp))	// add files
+                if(!(direntp->d_attr & _A_SUBDIR)) {
+                        f = new FileItem;
+                        f->settext(direntp->d_name);
+                        f->attr = FileItem::File;
+                        f->setcolor(Item::Selected,fc[FileSel]);
+                        f->setcolor(Item::Unselected,fc[FileUnsel]);
+                        sortinsert(f);
+                }
+	rewinddir(dirp);
 	while(direntp = readdir(dirp))	// add directories
                 if(direntp->d_attr & _A_SUBDIR && strcmp(direntp->d_name,".")
                         && strcmp(direntp->d_name,"..")) {
-                        additem(direntp->d_name);
-                        attrs[items] = Directory; items++;
-                }
-	rewinddir(dirp);
-	while(direntp = readdir(dirp))	// add files
-                if(!(direntp->d_attr & _A_SUBDIR)) {
-                        additem(direntp->d_name);
-                        attrs[items] = File; items++;
+                        f = new FileItem;
+                        f->settext(direntp->d_name);
+                        f->attr = FileItem::Directory;
+                        f->setcolor(Item::Selected,fc[DirSel]);
+                        f->setcolor(Item::Unselected,fc[DirUnsel]);
+                        sortinsert(f);
                 }
 	closedir(dirp);
 	free(wd);
+}
+
+void FileWnd::sortinsert(FileItem *newitem)
+/* Inserts the given FileItem sorted into the listbox. Assumes that the
+ * drive letters are already added and sorts files before drives and
+ * directories before files.
+ */
+{
+        unsigned int i = 0;
+        FileItem *f;
+
+        while(f = (FileItem *)getitem(i)) {
+                // at "end of list" ?
+                if(f->attr == FileItem::Drive ||
+                       (newitem->attr == FileItem::Directory &&
+                       f->attr == FileItem::File)) {
+                        if(i) insertitem(newitem,i-1); else additem(newitem);
+                        return;
+                }
+
+                // sort into list
+                if(strcmp(newitem->gettext(),f->gettext()) < 0) {
+                        if(i) insertitem(newitem,i-1); else additem(newitem);
+                        return;
+                }
+
+                i++;
+        }
 }
 
 void FileWnd::listdrives()
 {
         char drvstr[3] = "A:";
         unsigned int drives,drive,i;
+        FileItem *f;
 
         // add drives
         drive = _getdrive();    // save current drive
         _dos_setdrive(drive,&drives);     // get number of drives
-        for(i=1;i<=drives;i++) {
+        for(i=drives;i>=1;i--) {
                 _dos_setdrive(i,&drives);
                 if(_getdrive() == i) {  // drive exists?
                         *drvstr = 'A'+i-1;      // build drive string
-                        additem(drvstr);     // add drive name
-                        attrs[items] = Drive; items++;
+                        f = new FileItem;
+                        f->settext(drvstr);
+                        f->attr = FileItem::Drive;
+                        f->setcolor(Item::Selected,fc[DriveSel]);
+                        f->setcolor(Item::Unselected,fc[DriveUnsel]);
+                        additem(f);     // add drive name
                 }
         }
         _dos_setdrive(drive,&drives);   // restore current drive
@@ -193,20 +249,7 @@ void FileWnd::listarc(archive &a)
 	unsigned int i;
         ArcFile *f;
         char *basename;
-
-        // Add Subdirectories
-        for(i=0;i<a.getfiles();i++) {
-                f = a.getfile(i);
-
-                // In our current archive's directory?
-                if(strncmp(f->name,dirprefix,strlen(dirprefix))) continue;
-                basename = f->name + strlen(dirprefix);
-
-                if(f->attr & ArcFile::Directory && !strchr(basename,'/')) {
-                        additem(basename);
-                        attrs[items] = Directory; items++;
-                }
-        }
+        FileItem *item;
 
         // Add files of current directory
         for(i=0;i<a.getfiles();i++) {
@@ -218,8 +261,30 @@ void FileWnd::listarc(archive &a)
                 if(strchr(basename,'/')) continue;
 
                 if(!(f->attr & ArcFile::Directory)) {
-                        additem(basename);
-                        attrs[items] = File; items++;
+                        item = new FileItem;
+                        item->settext(basename);
+                        item->attr = FileItem::File;
+                        item->setcolor(Item::Selected,fc[FileSel]);
+                        item->setcolor(Item::Unselected,fc[FileUnsel]);
+                        sortinsert(item);
+                }
+        }
+
+        // Add Subdirectories
+        for(i=0;i<a.getfiles();i++) {
+                f = a.getfile(i);
+
+                // In our current archive's directory?
+                if(strncmp(f->name,dirprefix,strlen(dirprefix))) continue;
+                basename = f->name + strlen(dirprefix);
+
+                if(f->attr & ArcFile::Directory && !strchr(basename,'/')) {
+                        item = new FileItem;
+                        item->settext(basename);
+                        item->attr = FileItem::Directory;
+                        item->setcolor(Item::Selected,fc[DirSel]);
+                        item->setcolor(Item::Unselected,fc[DirUnsel]);
+                        sortinsert(item);
                 }
         }
 }

@@ -1,5 +1,22 @@
 /*
- * window.cpp - Textmode window library, by Simon Peter (dn.tlp@gmx.net)
+ * window.cpp - Textmode window library
+ * Copyright (c) 2001, 2002 Simon Peter <dn.tlp@gmx.net>
+ *
+ * This software is provided 'as-is', without any express or implied
+ * warranty.  In no event will the authors be held liable for any damages
+ * arising from the use of this software.
+ *
+ * Permission is granted to anyone to use this software for any purpose,
+ * including commercial applications, and to alter it and redistribute it
+ * freely, subject to the following restrictions:
+ *
+ * 1. The origin of this software must not be misrepresented; you must not
+ *    claim that you wrote the original software. If you use this software
+ *    in a product, an acknowledgment in the product documentation would be
+ *    appreciated but is not required.
+ * 2. Altered source versions must be plainly marked as such, and must not be
+ *    misrepresented as being the original software.
+ * 3. This notice may not be removed or altered from any source distribution.
  */
 
 #include <stdlib.h>
@@ -9,15 +26,25 @@
 #include "txtgfx.h"
 #include "window.h"
 
+// Defaults
 #define DEFWNDSIZEX	20
 #define DEFWNDSIZEY	20
 #define DEFWNDPOSX	0
 #define DEFWNDPOSY	0
+#define DEFTXTBUFSIZE	1024
+#define MAXCOLORS       8
 
-CWindow::CWindow(): x(DEFWNDPOSX), y(DEFWNDPOSY), curpos(0), autocolor(true), colmap(0), wndbuf(0), caption(0)
+// Static variable initialization
+static unsigned char CWindow::color[MAXCOLORS] = {7, 7, 7, 7, 0x70, 7, 4, 4};
+static CWindow *CWindow::focus = 0;
+
+/***** CWindow *****/
+
+CWindow::CWindow(): x(DEFWNDPOSX), y(DEFWNDPOSY), curpos(0), autocolor(true),
+        colmap(0), wndbuf(0), caption(0)
 {
+        if(!focus) setfocus();  // First created window? Set focus here!
 	setcaption("Window");
-	memset(color,7,MAXCOLORS);
 	resize(DEFWNDSIZEX,DEFWNDSIZEY);
 }
 
@@ -25,13 +52,12 @@ CWindow::~CWindow(void)
 {
 	delete [] colmap;
 	delete [] wndbuf;
+        if(caption) delete [] caption;
 }
 
-void CWindow::setcaption(char *newcap)
+void CWindow::setcaption(const char *newcap)
 {
-	if(caption)
-		delete [] caption;
-
+        if(caption) delete [] caption;
 	caption = new char [strlen(newcap)+1];
 	strcpy(caption,newcap);
 }
@@ -57,14 +83,14 @@ void CWindow::setxy(unsigned char newx, unsigned char newy)
 	y = newy;
 }
 
-void CWindow::out_setcolor(Color c, unsigned char v)
+static void CWindow::setcolor(Color c, unsigned char v)
 {
-	color[c] = v;
+        color[c] = v;
 }
 
-unsigned char CWindow::out_getcolor(Color c)
+static unsigned char CWindow::getcolor(Color c)
 {
-	return color[c];
+        return color[c];
 }
 
 void CWindow::resize(unsigned char newx, unsigned char newy)
@@ -76,7 +102,17 @@ void CWindow::resize(unsigned char newx, unsigned char newy)
 	wndbuf = new char [insizex*insizey];
 	colmap = new unsigned char [insizex*insizey];
 	memset(wndbuf,' ',insizex*insizey);
-	memset(colmap,color[In],insizex*insizey);
+        memset(colmap,color[In],insizex*insizey);
+}
+
+void CWindow::setfocus()
+{
+        focus = this;
+}
+
+static CWindow *CWindow::getfocus()
+{
+        return focus;
 }
 
 void CWindow::redraw(void)
@@ -84,14 +120,17 @@ void CWindow::redraw(void)
 	unsigned char i,j,wndx,wndy=0;
 
 	settextposition(y,x);
-	::setcolor(color[Border]);
+        ::setcolor(color[Border]);
 	outchar('Ú');
 	for(i=x+1;i<x+((sizex-1)/2-(strlen(caption)/2+2));i++)
 		outchar('Ä');
 	::outtext("> ");
-	::setcolor(color[Caption]);
+        if(focus == this)
+                ::setcolor(color[Focus]);
+        else
+                ::setcolor(color[Caption]);
 	::outtext(caption);
-	::setcolor(color[Border]);
+        ::setcolor(color[Border]);
 	::outtext(" <");
 	for(i+=strlen(caption)+4;i<x+sizex-1;i++)
 		outchar('Ä');
@@ -101,7 +140,7 @@ void CWindow::redraw(void)
 		wndx = 0;
 		for(i=x;i<x+sizex;i++)
 			if(i==x || i==x+sizex-1) {
-				::setcolor(color[Border]);
+                                ::setcolor(color[Border]);
 				outchar('³');
 			} else {
 				::setcolor(colmap[wndy*insizex+wndx]);
@@ -110,7 +149,7 @@ void CWindow::redraw(void)
 			}
 		wndy++;
 	}
-	::setcolor(color[Border]);
+        ::setcolor(color[Border]);
 	settextposition(y+sizey-1,x);
 	outchar('À');
 	for(i=x+1;i<x+sizex-1;i++)
@@ -125,8 +164,7 @@ void CWindow::outc(char c)
 
 	if(c != '\n') {
 		wndbuf[curpos] = c;
-		if(autocolor)
-			colmap[curpos] = color[In];
+                if(autocolor) colmap[curpos] = color[In];
 		curpos++;
 	} else
 		setcursor(0,wherey()+1);
@@ -148,10 +186,12 @@ void CWindow::puts(char *str)
 
 void CWindow::clear()
 {
-	memset(colmap,color[In],insizex*insizey);
+        memset(colmap,color[In],insizex*insizey);
 	memset(wndbuf,' ',insizex*insizey);
 	setcursor(0,0);
 }
+
+/***** CTxtWnd *****/
 
 CTxtWnd::CTxtWnd()
 	: CWindow(), bufsize(DEFTXTBUFSIZE)
@@ -164,8 +204,7 @@ CTxtWnd::CTxtWnd()
 void CTxtWnd::erase()
 {
 	memset(txtbuf,'\0',bufsize);
-	txtpos = 0;
-	start = 0;
+        txtpos = start = 0;
 }
 
 void CTxtWnd::outtext(const char *str)
@@ -187,6 +226,29 @@ void CTxtWnd::outtext(const char *str)
 	}
 }
 
+void CTxtWnd::format(const char *str)
+{
+        unsigned int i, sx, lastmark = 0;
+        char *tmpstr = new char [strlen(str)+1];
+
+        strcpy(tmpstr,str);
+
+        for(i=sx=0;i<strlen(tmpstr);i++,sx++)
+                switch(tmpstr[i]) {
+                case ' ': lastmark = i; break;
+                case '\n': sx = 0; break;
+                default:
+                        if(sx >= getsizex()) {
+                                tmpstr[lastmark] = '\n';
+                                sx = i - lastmark;
+                        }
+                        break;
+                }
+
+        outtext(tmpstr);
+        delete [] tmpstr;
+}
+
 void CTxtWnd::update()
 {
 	clear();
@@ -194,7 +256,13 @@ void CTxtWnd::update()
 	redraw();
 }
 
-void CTxtWnd::scroll_down(unsigned int amount)
+bool CTxtWnd::scroll_set(unsigned int line)
+{
+        start = 0;
+        return scroll_down(line);
+}
+
+bool CTxtWnd::scroll_down(unsigned int amount)
 {
 	unsigned int i,delta;
 
@@ -204,11 +272,16 @@ void CTxtWnd::scroll_down(unsigned int amount)
 			start += insizex;
 		else
 			start += delta;
-		if(start >= strlen(txtbuf)) start = strlen(txtbuf)-1;
+                if(start >= strlen(txtbuf)) {
+                        start = strlen(txtbuf)-1;
+                        return false;
+                }
 	}
+
+        return true;
 }
 
-void CTxtWnd::scroll_up(unsigned int amount)
+bool CTxtWnd::scroll_up(unsigned int amount)
 {
 	unsigned int	i,delta;
 	char			*ptr;
@@ -219,121 +292,178 @@ void CTxtWnd::scroll_up(unsigned int amount)
 		if(ptr <= txtbuf) {
 			delta = 0;
 			start = 0;
+                        return false;
 		}
 		if(delta > insizex)
 			start -= insizex;
 		else
 			start -= delta;
 	}
+
+        return true;
 }
+
+/***** CListWnd *****/
 
 CListWnd::CListWnd()
-	: CWindow(), selcol(0x70), unselcol(7)
+        : CWindow(), il(0)
 {
-	removeall();
 	autocolor = false;
+        removeall();
 }
 
-unsigned int CListWnd::additem(char *str)
+CListWnd::~CListWnd()
 {
-	unsigned int i;
-
-	for(i=0;i<MAXITEMS;i++)
-		if(!useitem[i]) {
-			strcpy(item[i],str);
-			useitem[i] = true;
-			numitems++;
-			return i;
-		}
-
-	return (MAXITEMS + 1);
+        removeall();
 }
 
-void CListWnd::removeitem(unsigned int nr)
+void CListWnd::additem(Item *newitem)
 {
-	if(useitem[nr]) {
-		useitem[nr] = false;
-		numitems--;
-	}
+        ItemList *i = new ItemList;
+
+        // Add item at beginning of list
+        i->item = newitem; i->prev = 0;
+        il->prev = i; i->next = il;
+        il = start = i;
+
+        selected = i;
 }
 
-char *CListWnd::getitem(unsigned int nr)
+CListWnd::Item *CListWnd::getitem(unsigned int nr)
 {
-	if(useitem[nr])
-		return item[nr];
-	else
-		return 0;
+        unsigned int i;
+        ItemList *j = il;
+
+        for(i=0;i<nr;i++)
+                if(j) j = j->next; else return 0;
+
+        return j->item;
+}
+
+void CListWnd::insertitem(Item *newitem, unsigned int nr)
+{
+        unsigned int i;
+        ItemList *j = il, *k = new ItemList;
+
+        for(i=0;i<nr;i++)
+                if(j) j = j->next; else return;
+
+        k->item = newitem; k->prev = j; k->next = j->next;
+        j->next->prev = k; j->next = k;
 }
 
 void CListWnd::update()
 {
-	unsigned int i;
+        ItemList *i;
 
 	clear();
-	for(i=start;(i<start+insizey) && (i<numitems);i++)
-		if(useitem[i]) {
-			if(i == selected)
-				memset(colmap+getcursor(),selcol,insizex);
-			else
-				memset(colmap+getcursor(),unselcol,insizex);
-			puts(item[i]);
-		}
+        for(i=start;i && wherey() < insizey;i=i->next)
+                if(i) {
+                        if(i == selected)
+                                        memset(colmap+getcursor(),i->item->getcolor(Item::Selected),insizex);
+                                else
+                                        memset(colmap+getcursor(),i->item->getcolor(Item::Unselected),insizex);
+                                puts(i->item->gettext());
+                }
+
 	redraw();
 }
 
-void CListWnd::select_next()
+bool CListWnd::setselection(unsigned int nr)
 {
-	if(selected + 1 < numitems)
-		selected++;
-
-	if(selected >= start + insizey)
-		scroll_down();
+        selected = start = il; selpos = 0;
+        return select_next(nr);
 }
 
-void CListWnd::select_prev()
+bool CListWnd::select_next(unsigned int amount)
 {
-	if(selected)
-		selected--;
+        unsigned int i;
+        bool retval = true;
 
-	if(selected < start)
-		start = selected;
+        for(i=0;i<amount;i++)
+                if(selected->next) {
+                        selected = selected->next;
+                        selpos++;
+                } else {
+                        retval = false;
+                        break;
+                }
+
+        // Scroll down window, if necessary
+        while(selpos >= insizey) {
+                scroll_down();
+                selpos--;
+        }
+
+        return retval;
+}
+
+bool CListWnd::select_prev(unsigned int amount)
+{
+        unsigned int i;
+
+        for(i=0;i<amount;i++)
+                if(selected->prev) {
+                        selected = selected->prev;
+                        if(selpos) selpos--; else scroll_up();
+                } else
+                        return false;
+
+        return true;
+}
+
+void CListWnd::scroll_down()
+{
+        if(start->next) start = start->next;
+}
+
+void CListWnd::scroll_up()
+{
+        if(start->prev) start = start->prev;
 }
 
 void CListWnd::removeall()
 {
-	for(unsigned int i=0;i<MAXITEMS;i++)
-		useitem[i] = false;
-	selected = 0;
-	start = 0;
-	numitems = 0;
+        ItemList *i;
+
+        while(il) {
+                i = il->next;
+                delete il->item;
+                delete il;
+                il = i;
+        }
+
+        selected = start = 0; selpos = 0;
 }
 
-void CListWnd::setcolor(LColor c, unsigned char v)
+/***** CListWnd::Item *****/
+
+CListWnd::Item::Item(): text(0)
 {
-	switch(c) {
-	case Select:
-		selcol = v;
-		break;
-	case Unselect:
-		unselcol = v;
-		break;
-	}
+        color[Selected] = CWindow::getcolor(Select);
+        color[Unselected] = CWindow::getcolor(Unselect);
 }
 
-unsigned char CListWnd::getcolor(LColor c)
+CListWnd::Item::~Item()
 {
-	switch(c) {
-	case Select:
-		return selcol;
-	case Unselect:
-		return unselcol;
-	default:
-		return 0;
-	}
+        if(text) delete [] text;
 }
+
+void CListWnd::Item::settext(const char *str)
+{
+        text = new char[strlen(str)+1];
+        strcpy(text,str);
+}
+
+void CListWnd::Item::setcolor(Color c, unsigned char v)
+{
+        color[c] = v;
+}
+
+/***** CBarWnd *****/
 
 CBarWnd::CBarWnd(unsigned int n, unsigned int nmax)
-	: CWindow(), barcol(7), clipcol(4), nbars(n), max(nmax)
+        : CWindow(), nbars(n), max(nmax)
 {
 	unsigned int i;
 
@@ -351,9 +481,9 @@ void CBarWnd::update()
         // set colormap
 	for(i=0;i<insizex*insizey;i++)
 		if(i<(insizey/4)*insizex)
-			colmap[i] = clipcol;
+                        colmap[i] = color[Clip];
 		else
-			colmap[i] = barcol;
+                        colmap[i] = color[Bar];
 
         // draw bars
 	memset(wndbuf,' ',insizex*insizey);
@@ -372,26 +502,27 @@ void CBarWnd::set(unsigned int v, unsigned int n)
 	bars[n] = v;
 }
 
-void CBarWnd::setcolor(BColor c, unsigned char v)
-{
-	switch(c) {
-	case Bar:
-		barcol = v;
-		break;
-	case Clip:
-		clipcol = v;
-		break;
-	}
-}
+/***** CErrWnd *****/
 
-unsigned char CBarWnd::getcolor(BColor c)
+static void CErrWnd::message(const char *errtxt, const char *caption)
 {
-	switch(c) {
-	case Bar:
-		return barcol;
-	case Clip:
-		return clipcol;
-	default:
-		return 0;
-	}
+        unsigned int rowln = 0, rows = 0, rwcnt = 0, i;
+        CTxtWnd wnd;
+
+        // Determine longest row and number of rows
+        for(i=0;i<=strlen(errtxt);i++)
+                if(errtxt[i] == '\n' || errtxt[i] == '\0') {
+                        if(rwcnt > rowln)
+                                rowln = rwcnt;
+                        rwcnt = 0;
+                        rows++;
+                } else
+                        rwcnt++;
+
+        // Prepare a CTxtWnd with information
+        wnd.setcaption(caption);
+        wnd.resize(rowln + 2,rows + 2);
+        wnd.center();
+        wnd.format(errtxt);
+        wnd.update();
 }

@@ -1,18 +1,7 @@
 AdPlay/DOS To Do List:
 ----------------------
-- Fix memory leak when loading many tunes in sequence.
 - Update Makefile to let source dist include timer and window subdirs. [dynamite]
-- Colorize file selector.
-- Sort file selector.
 - Add ARJ and RAR archive reading support.
-- Write more on-line help (f.e. linked AdPlug library version). [dynamite]
-- Fix commandline playing '-b' mode
-- Add default color scheme option to default configuration
-- During playback, when pressing ESC once should just stop the song instead of
-  exit immediately.
-- Use TEMP in addition to TMP environment variable.
-- If none of the TEMP and TMP variables is defined, extract to another defined
-  directory instead of to the current directory.
-- Use a unique subdirectory under the TEMP directory for temporary file
-  operations, instead of putting everything in the TEMP dir directly.
-- Use Up/Down/PgUp/PgDn/Home/End keys specifically for each window.
+- Write more on-line help.
+- Add more layouts.
+- Add fancy screensaver feature. [dynamite]

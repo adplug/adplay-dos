@@ -3,7 +3,7 @@
                €    ‹€ €€    €€ €€       €€      €    ‹€    ‹€
                €     € €€‹‹‹‹‹ﬂ €€       €€‹‹‹‹‹ €     €    €€
 
-AdPlay/DOS 1.3, (c) 2000 - 2002 Simon Peter <dn.tlp@gmx.net>
+AdPlay/DOS 1.3, Copyright (c) 2000 - 2002 Simon Peter <dn.tlp@gmx.net>
 Website: http://adplug.sourceforge.net
 
 Description:
@@ -52,6 +52,19 @@ Returning from a DOS shell in a Windows 95 DOS Box will destroy the sound.
 Shelling to DOS while playing back with high timer rates can crash the
 player while within real DOS.
 
+Credits:
+--------
+AdPlay/DOS is completely programmed by Simon Peter. It depends on the AdPlug
+audio library, the WATCOM textmode window class library and the OpenCP WATCOM
+timer library, which are all also copyrighted by Simon Peter. The OpenCP
+WATCOM timer library is also copyrighted by Niklas Beisert, et al.
+
+All documentation is written by Simon Peter.
+
+The screen layouts Default, HighRes, LowRes, Monochrome and Analyzer,
+provided inside the INI file, are created by Simon Peter. The layouts Arctic
+and Cherry are created by Death Adder <death-adder@juno.com>.
+
 Legal:
 ------
 This software is provided 'as-is', without any express or implied
@@ -72,8 +85,11 @@ freely, subject to the following restrictions:
 
 Release History:
 ----------------
-- 1.3 (2002-08-01)
-  - (NO NEWS YET)
+- 1.3 (2002-09-27)
+  - Colorized & sorted file selector
+  - Enhanced on-line help
+  - Lots of navigational changes (more MS Windows like)
+  - More screen layouts
 
 - 1.2 (2002-07-30)
   - Linked with AdPlug 1.2, excluding U6M & ROL players

@@ -21,26 +21,26 @@
  * NOTES:
  * All functions that can return an error, will only return true if they
  * succeeded and false if there was an error. A subsequent call to geterror()
- * will return the errorcode, #define'd through the ERR_* macros.
+ * will return the errorcode, defined through the Error enum.
  */
 
 #include <stdio.h>
 
 #define MAXINILINE      256     // max. length of a line in the INI-File
-#define MAXINIITEM      12      // max. length of an item in the INI-File
+#define MAXINIITEM      16      // max. length of an item in the INI-File
 
 class CfgParse
 {
 public:
         enum Error { None, NotFound, NextSection, NextSubsection, eof, Invalid };
 
-        CfgParse(char *cfgfile);        // Open up a config file
+        CfgParse(const char *cfgfile);  // Open up a config file
         ~CfgParse();
 
-        bool section(char *name);       // Jump to section
+        bool section(const char *name); // Jump to section
 
         // Jump to subsection, under section 'nsec' or current section if NULL
-        bool subsection(char *name, char *nsec);
+        bool subsection(const char *name, const char *nsec);
 
         void reparse();                 // Reparse from scratch
 
@@ -51,7 +51,7 @@ public:
         // config file. 'vars' consists of null-terminated substrings for
         // each defined config variable. The whole string is terminated by a
         // double null sequence (i.e. "\0\0").
-        void enum_vars(char *vars);
+        void enum_vars(const char *vars);
 
         // Returns an index into the 'vars' string, pointing to the
         // corresponding variable that comes next in the config file.
@@ -71,13 +71,13 @@ public:
         // They never fail and return no errors at all.
         long readlong();                // read a signed long int
         unsigned long readulong();      // read an unsigned long int
-        char *readstr(char *str);       // read a string into 'str' (pre-malloc'ed)
+        char *readstr();                // read a string
         char readchar();                // read a char
         bool readbool();                // read a bool ("yes"/"true"=true)
 
 private:
         bool parse_line();
-        bool empty(char *str);
+        bool empty(const char *str);
 
         Error err;
         FILE *f;

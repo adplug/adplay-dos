@@ -28,13 +28,13 @@
 //#define DEBUG
 
 #ifdef DEBUG
-#define DEBUG_FILE      "debug.log"     // File to log to
+#define DEBUG_FILE      "debug2.log"     // File to log to
 
 static FILE *f_log;
 
-void dbg_printf(char *fmt, ...)
+static void dbg_printf(char *fmt, ...)
 {
-        char logbuffer[256];
+        static char logbuffer[256];
 
         // build debug log string
         va_list argptr;
@@ -46,12 +46,12 @@ void dbg_printf(char *fmt, ...)
         fprintf(f_log,logbuffer);
 }
 #else
-void dbg_printf(char *fmt, ...) { }
+static void dbg_printf(char *fmt, ...) { }
 #endif
 
 #include "cfgparse.h"
 
-CfgParse::CfgParse(char *cfgfile)
+CfgParse::CfgParse(const char *cfgfile)
         : varlist(0), err(None), linenum(0)
 {
 #ifdef DEBUG
@@ -83,7 +83,7 @@ CfgParse::~CfgParse()
 #endif
 }
 
-bool CfgParse::section(char *name)
+bool CfgParse::section(const char *name)
 {
         dbg_printf("section {\n");
 
@@ -100,7 +100,7 @@ bool CfgParse::section(char *name)
         return true;
 }
 
-bool CfgParse::subsection(char *name, char *nsec)
+bool CfgParse::subsection(const char *name, const char *nsec)
 {
         char tmpsection[MAXINIITEM];
 
@@ -125,9 +125,9 @@ bool CfgParse::subsection(char *name, char *nsec)
         return true;
 }
 
-void CfgParse::enum_vars(char *vars)
+void CfgParse::enum_vars(const char *vars)
 {
-        char            *pos;
+        const char      *pos;
 	unsigned int	i=0;
 
         // count number of submitted variables for easy malloc()'ing, later
@@ -187,10 +187,9 @@ unsigned long CfgParse::readulong()
         return ul;
 }
 
-char *CfgParse::readstr(char *str)
+char *CfgParse::readstr()
 {
-        strcpy(str,val);
-        return str;
+        return val;
 }
 
 char CfgParse::readchar()
@@ -211,7 +210,7 @@ CfgParse::Error CfgParse::geterror()
 	return err;
 }
 
-bool CfgParse::empty(char *str)
+bool CfgParse::empty(const char *str)
 // Returns true, if 'str' contains only whitespace
 {
         unsigned int i;

@@ -38,28 +38,41 @@ ArcFile::~ArcFile()
 
 void ArcFile::set_name(char *fname)
 {
+        if(name) delete [] name;
         name = new char[strlen(fname)+1];
         strcpy(name,fname);
 }
 
 /***** archive *****/
 
-archive::archive(): arcname(0)
+archive::archive(): arcname(0), f(0), files(0)
 {
 }
 
 archive::~archive()
 {
-        for(unsigned int i=0;i<files;i++) delete file[i];
-        if(arcname) delete [] arcname;
+        close();
 }
 
-bool archive::open(char *filename)
+bool archive::open(const char *filename)
 {
+        close();
         f = fopen(filename,"rb");
 	arcname = new char [strlen(filename)+1];
 	strcpy(arcname,filename);
-        return read();
+        if(read())
+                return true;
+        else {
+                close();
+                return false;
+        }
+}
+
+void archive::close()
+{
+        for(unsigned int i=0;i<files;i++) delete file[i];
+        if(arcname) delete [] arcname;
+        if(f) fclose(f);
 }
 
 archive *archive::detect(char *filename)

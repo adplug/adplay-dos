@@ -23,6 +23,7 @@
 #include <fstream.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <ctype.h>
 #include <conio.h>
 #include <malloc.h>
@@ -38,8 +39,10 @@
 #include "cfgparse.h"
 #include "arcfile.h"
 #include "filewnd.h"
+#include "helptxt.h"
 
 // global defines
+#define DEBUG                           // Define this for debug mode
 #define ADPLAYVERS      "AdPlay 1.3"    // AdPlay version string
 #define DEFSTACK        (32*1024)       // stack size for timer-replay code
 #define CONFIGFILE      "adplay.ini"    // filename of default configuration file
@@ -50,7 +53,8 @@
 // Valid configuration variables
 #define CONFIG_VARS     "Background\0AdlibPort\0PosX\0PosY\0SizeX\0SizeY\0" \
         "ColBorder\0ColCaption\0ColIn\0ColSelect\0ColUnselect\0ColBar\0" \
-        "ColClip\0HighRes\0Force\0"
+        "ColClip\0HighRes\0Force\0ColFileSel\0ColFileUnsel\0ColDirSel\0" \
+        "ColDirUnsel\0ColDriveSel\0ColDriveUnsel\0Section\0ColFocus\0"
 
 // global variables
 CAnalopl opl;                             // The only output device
@@ -59,8 +63,7 @@ CWndMan wnds;                             // Window manager
 CTxtWnd titlebar,infownd,songwnd,instwnd; // Windows
 FileWnd filesel;                          // File selector window
 CBarWnd volbars(9,63),mastervol(1,63);    // More windows
-unsigned char backcol=7,colIn=7,colBorder=7,colCaption=7,colSelect=0x70,
-        colUnselect=7;                    // Main colors (set to defaults)
+unsigned char backcol=7;                  // Background color
 unsigned int subsong,optind=1;
 bool hivideo=true,oplforce=false;         // Configuration
 volatile float time_ms=0.0f;              // Current playing time in ms
@@ -69,6 +72,32 @@ char configfile[PATH_MAX];                // Path to configfile
 VideoInfo dosvideo;                       // Stores previous (DOS's) video settings
 int volume=0;                             // Main volume
 float last_ms=0.0f;                       // helper variable for delay_ms()
+volatile bool inpoll = false;             // Flag set if in poll_player()
+char *tmpfn = 0;                          // Unique, temporary filename
+bool in_help;                             // Flag set when help is displayed
+
+// Debug precautions
+#ifdef DEBUG
+#define DEBUG_FILE      "adplay.log"     // File to log to
+
+static FILE *f_log;
+
+static void dbg_printf(char *fmt, ...)
+{
+        static char logbuffer[256];
+
+        // build debug log string
+        va_list argptr;
+        va_start(argptr, fmt);
+        vsprintf(logbuffer, fmt, argptr);
+        va_end(argptr);
+
+        // print out log line
+        fprintf(f_log,logbuffer);
+}
+#else
+static void dbg_printf(char *fmt, ...) { }
+#endif
 
 void poll_player(void)
 /* This is the main replay function and hooked at first into the timer
@@ -89,13 +118,14 @@ void poll_player(void)
 	static unsigned int	del=0,wait=0;
 
         if(!p) return;  // no player in memory means we're not playing
+        if(inpoll) return; else inpoll = true;  // Running...
 
         time_ms += 1000/(oldfreq*(wait+1));
 
         // pseudo timer environment
 	if(del) {
                 del--;          // just wait for this time fraction
-		return;
+                inpoll = false; return;
         } else
                 del = wait;     // last fraction, reset for next one
 
@@ -106,6 +136,8 @@ void poll_player(void)
                 del = wait = NORMALIZE / oldfreq;
 		tmSetNewRate(1192737/(oldfreq*(wait+1)));
 	}
+
+        inpoll = false;         // ...and out again!
 }
 
 void setadplugvideo()
@@ -137,11 +169,11 @@ void listcolors(char *fn, CListWnd &cl)
  * the given filename 'fn'.
  */
 {
-	ifstream	f(fn,ios::in | ios::nocreate);
-	char		vglsec[MAXINILINE],var[MAXINILINE],*dummy;
+        ifstream f(fn,ios::in | ios::nocreate);
+        char vglsec[MAXINILINE],var[MAXINILINE],*dummy;
+        CListWnd::Item *item;
 
-	if(!f.is_open())			// file not found?
-		return;
+        if(!f.is_open()) return;                // file not found?
 
 	cl.removeall();
 	do {					// list sections
@@ -149,7 +181,9 @@ void listcolors(char *fn, CListWnd &cl)
 		if(sscanf(vglsec," [%s",var) && *vglsec) {
 			dummy = strrchr(var,']');
 			*dummy = '\0';
-			cl.additem(var);
+                        item = new CListWnd::Item;
+                        item->settext(var);
+                        cl.additem(item);
 		}
 	} while(!f.eof());
 }
@@ -159,30 +193,17 @@ void display_help(CTxtWnd &w)
 {
 	w.erase();
 	w.setcaption("Help");
-	w.puts("Keyboard Control:\n"
-		 "-----------------\n\n"
-		 "Up/Down    - Select in Menu\n"
-		 "Left/Right - Previous/Next Subsong\n"
-		 "PgUp/PgDn  - Scroll Instrument Names Window\n"
-		 "Home/End   - Scroll Help / Song Message Window\n"
-		 "Return     - Play Song / Change Directory\n"
-		 "Space      - Fast Forward\n"
-		 "ESC        - Exit to DOS\n"
-		 "F1         - Help\n"
-		 "F2         - Change Screen Layout\n"
-		 "D          - Shell to DOS\n"
-		 "M          - Display Song Message\n"
-		 "+/-        - Volume Up/Down");
-	w.update();
+        w.format(ONLINE_HELP);
+        in_help = true;
 }
 
-void read_stdwnd(CfgParse &cp, char *subsec, char *section, CWindow &w)
-/* Sets the configured positions and colors for a given window */
+bool read_stdwnd(CfgParse &cp, const char *subsec, const char *section,
+        CWindow &w)
+/* Sets the configured positions for a given window. Returns true if
+ * succeeded, false otherwise.
+ */
 {
-        if(!cp.subsection(subsec,section)) {
-                printf("subsection '%s' not found (%d)!\n",subsec,cp.geterror());
-		return;
-        }
+        if(!cp.subsection(subsec,section)) return false;
 
         while(!cp.geterror())
                 switch(cp.peekvar()) {
@@ -190,15 +211,14 @@ void read_stdwnd(CfgParse &cp, char *subsec, char *section, CWindow &w)
                 case 3: w.setxy(w.posx(),cp.readlong()); break;
                 case 4: w.resize(cp.readlong(),w.getsizey()); break;
                 case 5: w.resize(w.getsizex(),cp.readlong()); break;
-                case 6: w.out_setcolor(w.Border,cp.readlong()); break;
-                case 7: w.out_setcolor(w.Caption,cp.readlong()); break;
-                case 8: w.out_setcolor(w.In,cp.readlong()); break;
 		}
+
+        if(cp.geterror() == CfgParse::Invalid) return false; else return true;
 }
 
-bool loadconfig(char *fn, char *section)
-/* Loads and sets the general configuration out of the file, named by 'fn',
- * using the section 'section' therein. Returns true, if succeeded.
+bool loadconfig(const char *fn, const char *section)
+/* Loads and sets only the general configuration out of the file, named by
+ * 'fn', using the section 'section' therein. Returns true, if succeeded.
  */
 {
         CfgParse cp(fn);
@@ -219,11 +239,11 @@ bool loadconfig(char *fn, char *section)
 		}
         } while(!cp.geterror());
 
-	return true;
+        if(cp.geterror() == CfgParse::Invalid) return false; else return true;
 }
 
-bool loadcolors(char *fn, char *section)
-/* Loads and sets the color-definition out of the file, named by 'fn',
+bool loadcolors(const char *fn, const char *section)
+/* Loads and sets only the color-definition out of the file, named by 'fn',
  * using the section 'section' therein. Returns true, if succeeded.
  */
 {
@@ -232,28 +252,30 @@ bool loadcolors(char *fn, char *section)
         if(cp.geterror() == CfgParse::NotFound)       // file not found?
 		return false;
 
-        // Defined config variables
+        // Define config variables
         cp.enum_vars(CONFIG_VARS);
 
-        if(!cp.section(section))        // Jump to section, if defined
-		return false;
+        // Read sizes/positions of windows
+        read_stdwnd(cp,"titlebar",section,titlebar);
+        read_stdwnd(cp,"infownd",section,infownd);
+        read_stdwnd(cp,"songwnd",section,songwnd);
+        read_stdwnd(cp,"instwnd",section,instwnd);
+        read_stdwnd(cp,"filesel",section,filesel);
+        read_stdwnd(cp,"volbars",section,volbars);
+        read_stdwnd(cp,"mastervol",section,mastervol);
 
+        // Read GUI color configuration
+        if(!cp.section(section)) return false;
         do {
                 switch(cp.peekvar()) {
                 case 0: backcol = cp.readlong(); break;
-                case 6: colBorder = cp.readlong(); wnds.setcolor(CWindow::Border,colBorder); break;
-                case 7: colCaption = cp.readlong(); wnds.setcolor(CWindow::Caption,colCaption); break;
-                case 8: colIn = cp.readlong(); wnds.setcolor(CWindow::In,colIn); break;
-                case 9: colSelect = cp.readlong(); filesel.setcolor(filesel.Select,colSelect); break;
-                case 10: colUnselect = cp.readlong(); filesel.setcolor(filesel.Unselect,colUnselect); break;
-		case 11:
-                        volbars.setcolor(volbars.Bar,cp.readlong());
-                        mastervol.setcolor(mastervol.Bar,cp.readlong());
-			break;
-		case 12:
-                        volbars.setcolor(volbars.Clip,cp.readlong());
-                        mastervol.setcolor(mastervol.Clip,cp.readlong());
-			break;
+                case 6: CWindow::setcolor(CWindow::Border,cp.readlong()); break;
+                case 7: CWindow::setcolor(CWindow::Caption,cp.readlong()); break;
+                case 8: CWindow::setcolor(CWindow::In,cp.readlong()); break;
+                case 9: CWindow::setcolor(CWindow::Select,cp.readlong()); break;
+                case 10: CWindow::setcolor(CWindow::Unselect,cp.readlong()); break;
+                case 11: CWindow::setcolor(CWindow::Bar,cp.readlong()); break;
+                case 12: CWindow::setcolor(CWindow::Clip,cp.readlong()); break;
 		case 13:
 			if(cp.readbool()) {
 				hivideo = true;
@@ -265,38 +287,19 @@ bool loadcolors(char *fn, char *section)
 				hidecursor();
 			}
 			break;
+                case 15: FileWnd::setfilecolor(FileWnd::FileSel,cp.readlong()); break;
+                case 16: FileWnd::setfilecolor(FileWnd::FileUnsel,cp.readlong()); break;
+                case 17: FileWnd::setfilecolor(FileWnd::DirSel,cp.readlong()); break;
+                case 18: FileWnd::setfilecolor(FileWnd::DirUnsel,cp.readlong()); break;
+                case 19: FileWnd::setfilecolor(FileWnd::DriveSel,cp.readlong()); break;
+                case 20: FileWnd::setfilecolor(FileWnd::DriveUnsel,cp.readlong()); break;
+                case 21: loadcolors(fn,cp.readstr()); break;
+                case 22: CWindow::setcolor(CWindow::Focus,cp.readlong()); break;
 		}
         } while(!cp.geterror());
 
-        read_stdwnd(cp,"titlebar",section,titlebar);
-        read_stdwnd(cp,"infownd",section,infownd);
-        read_stdwnd(cp,"songwnd",section,songwnd);
-        read_stdwnd(cp,"instwnd",section,instwnd);
-        read_stdwnd(cp,"filesel",section,filesel);
-        read_stdwnd(cp,"volbars",section,volbars);
-        read_stdwnd(cp,"mastervol",section,mastervol);
-
-        if(cp.subsection("filesel",section))
-                while(!cp.geterror())
-                        switch(cp.peekvar()) {
-                        case 9: filesel.setcolor(filesel.Select,cp.readlong()); break;
-                        case 10: filesel.setcolor(filesel.Unselect,cp.readlong()); break;
-			}
-
-        if(cp.subsection("volbars",section))
-                while(!cp.geterror())
-                        switch(cp.peekvar()) {
-                        case 11: volbars.setcolor(volbars.Bar,cp.readlong()); break;
-                        case 12: volbars.setcolor(volbars.Clip,cp.readlong()); break;
-			}
-
-        if(cp.subsection("mastervol",section))
-                while(!cp.geterror())
-                        switch(cp.peekvar()) {
-                        case 11: mastervol.setcolor(mastervol.Bar,cp.readlong()); break;
-                        case 12: mastervol.setcolor(mastervol.Clip,cp.readlong()); break;
-			}
-	return true;
+        if(in_help) display_help(infownd);      // Reformat help display, if active
+        if(cp.geterror() == CfgParse::Invalid) return false; else return true;
 }
 
 void select_colors()
@@ -308,16 +311,8 @@ void select_colors()
 	char		inkey=0;
 	bool		ext;
 
-	colwnd.resize(20,10);
-	colwnd.setcaption("Layouts");
-	colwnd.out_setcolor(colwnd.Border,colBorder);
-	colwnd.out_setcolor(colwnd.In,colIn);
-	colwnd.out_setcolor(colwnd.Caption,colCaption);
-	colwnd.setcolor(colwnd.Select,colSelect);
-	colwnd.setcolor(colwnd.Unselect,colUnselect);
-        colwnd.center();
-	listcolors(configfile,colwnd);
-	colwnd.update();
+        colwnd.resize(20,10); colwnd.setcaption("Layouts"); colwnd.center();
+        listcolors(configfile,colwnd); colwnd.update();
 
 	do {
 		if(kbhit())
@@ -343,7 +338,7 @@ void select_colors()
 		else		// handle all normal keys
 			switch(inkey) {
 			case 13:	// [Return] - select layout
-				loadcolors(configfile,colwnd.getitem(colwnd.getselection()));
+                                loadcolors(configfile,colwnd.getselection()->gettext());
 				break;
 			}
 	} while(inkey != 27 && inkey != 13);	// [ESC] - Exit menu
@@ -371,9 +366,9 @@ void refresh_songdesc(CTxtWnd &w)
 {
 	w.erase();
 	w.setcaption("Song Message");
-	if(p)
-		w.puts(p->getdesc());
+        if(p) w.puts(p->getdesc());
 	w.update();
+        in_help = false;
 }
 
 void refresh_volbars(CBarWnd &w, CAnalopl &opl)
@@ -429,54 +424,86 @@ void fast_forward(const unsigned int ms)
 
 char *extract(char *newfn, archive *a, char *oldfn)
 /* Extract file 'oldfn' from archive 'a'. The filename of the extracted file
- * is stored in 'newfn'.
+ * is stored in 'newfn'. 0 is returned if an error occured.
  */
 {
 	char cmd[256];
 
+        dbg_printf("*** extract(\"%s\",a,\"%s\") ***\n",newfn,oldfn);
+
+        if(!tmpfn) return 0;    // No possible unique filename?
 	strcpy(cmd,"pkunzip ");
         strcat(cmd,a->getarcname());
         strcat(cmd," \"");
 	strcat(cmd,oldfn);
         strcat(cmd,"\" ");
-	strcat(cmd,getenv("TMP"));
+        strcat(cmd,tmpfn);
+
+        dbg_printf("running command: \"%s\"\n",cmd);
+
         if(!dosshell(cmd)) {    // If an error occured...
+                dbg_printf("An error occured while shelling!\n");
                 puts("An error occured while running the command:");
                 printf("%s\n",cmd);
                 puts("Please consult the above error messages, if any, and "
                         "press any key to continue...");
                 getch();
+                wnds.update();
+                return 0;
         }
-	wnds.update();
-	strcpy(newfn,getenv("TMP"));
+        wnds.update();
+        strcpy(newfn,tmpfn);
 	strcat(newfn,"\\");
         strcat(newfn,strrchr(oldfn,'/') ? strrchr(oldfn,'/') + 1 : oldfn);
+
+        dbg_printf("Returning: %s\n",newfn);
+        dbg_printf("--- extract ---\n");
 	return newfn;
+}
+
+void reset_windows()
+/* Resets all windows to the initial state at startup. */
+{
+        unsigned int i;
+
+        titlebar.erase();
+        titlebar.format(ADPLAYVERS ", Copyright (c) 2000 - 2002 Simon Peter <dn.tlp@gmx.net>\n"
+                "This is free software under the terms and conditions of the Nullsoft license.\n"
+                "Refer to the file README.TXT for more information.");
+        instwnd.setcaption("No Instruments"); instwnd.erase();
+        for(i=0;i<9;i++) volbars.set(0,i); 
+        songwnd.erase(); if(!in_help) infownd.erase(); wnds.update();
+}
+
+void stop()
+/* Stops currently playing tune. Does nothing, if not playing. */
+{
+        if(!p) return;
+        dbg_printf("stop(): A player is running. Stopping it.\n");
+        while(inpoll) ;         // Wait for timer routine
+        delete p; p = 0;
+        opl.init();
 }
 
 void play(char *fn)
 /* Start playback with file 'fn' */
 {
-        opl.init();
-        p = CAdPlug::factory(fn,&opl);     // get corresponding player
+        dbg_printf("*** play(\"%s\") ***\n",fn);
 
-        if(!p) {
-                // File not supported error
-                CTxtWnd errwnd;
+        stop();         // Stop eventually already playing player
+        p = CAdPlug::factory(fn,&opl);  // get corresponding player
 
-                errwnd.resize(26,3);
-                errwnd.center();
-                errwnd.setcaption("Error!");
-                errwnd.out_setcolor(errwnd.Caption,colCaption);
-                errwnd.out_setcolor(errwnd.In,colIn);
-                errwnd.out_setcolor(errwnd.Border,colBorder);
-                errwnd.puts(" Unsupported file type!");
-                errwnd.update();
+        if(!p) {        // File not supported error
+                dbg_printf("AdPlug's factory returned a NULL pointer! Bail out!\n");
+                CErrWnd::message("Unsupported file type!");
                 opl.init();
                 while(!getch());
-                wnds.update();
+                reset_windows();
+                dbg_printf("--- play() ---\n");
                 return;
         }
+
+        dbg_printf("We got a player! Reset infos and start playing...\n");
 
         // Reset playing infos
         last_ms = time_ms = 0.0f; subsong = 0;
@@ -504,6 +531,8 @@ void play(char *fn)
         sprintf(ins,"%d Instruments",p->getinstruments());
         instwnd.setcaption(ins);
         instwnd.update();
+
+        dbg_printf("--- play() ---\n");
 }
 
 void adjust_volume(int amount)
@@ -520,41 +549,39 @@ void adjust_volume(int amount)
 }
 
 void activate()
+/* This function knows what to do, when a file inside the file manager is
+ * selected by the user.
+ */
 {
-        CTxtWnd errwnd;
         bool result;
         char tmpfn[PATH_MAX];
 
-        // Preinitialize an error window, maybe we need it later...
-        errwnd.resize(26,3);
-        errwnd.center();
-        errwnd.setcaption("Error!");
-        errwnd.out_setcolor(errwnd.Caption,colCaption);
-        errwnd.out_setcolor(errwnd.In,colIn);
-        errwnd.out_setcolor(errwnd.Border,colBorder);
-
+        dbg_printf("activate(): Querying filesel.select()...\n");
         result = filesel.select();
 
         // Drive not ready error?
         if(filesel.geterror() == FileWnd::Drive_NotReady) {
-                errwnd.puts("    Drive not ready!");
-                errwnd.update();
+                dbg_printf("activate(): filesel.geterror() said \"Drive not ready\".\n");
+                CErrWnd::message("Drive not ready!");
                 while(!getch());
                 wnds.update();
                 return;
         }
 
-        if(result) {
+        if(result) {    // It's our file!
+                dbg_printf("activate(): It's our file! Try playback...\n");
                 // Start playback
                 if(filesel.inarchive()) {
                         char extract_name[PATH_MAX];
-                        extract(extract_name,filesel.getarchive(),
-                                filesel.getfilename(tmpfn));
+                        if(!extract(extract_name,filesel.getarchive(),
+                                filesel.getfilename(tmpfn)))
+                                return;
                         play(extract_name);
                         remove(extract_name);
                 } else
                         play(filesel.getfilename(tmpfn));
-        } else {
+        } else {        // File manager knows how to handle...
+                dbg_printf("activate(): filesel knows how to handle...\n");
                 // Refresh file manager window
                 filesel.refresh();
                 filesel.update();
@@ -562,23 +589,48 @@ void activate()
 }
 
 void idle_ms(unsigned int ms)
+/* Delays (idles) for an amount of 'ms' milliseconds.
+ * Use this function instead of the C library's delay() function!
+ */
 {
         while(time_ms < last_ms+ms) delay(0);
         last_ms = time_ms;
 }
 
+void window_cycle(bool backward = false)
+{
+        CWindow *focus = CWindow::getfocus();
+
+        if(!backward) {
+                if(focus == &filesel) infownd.setfocus();
+                else if(focus == &infownd) instwnd.setfocus();
+                else if(focus == &instwnd) filesel.setfocus();
+        } else {
+                if(focus == &filesel) instwnd.setfocus();
+                else if(focus == &infownd) filesel.setfocus();
+                else if(focus == &instwnd) infownd.setfocus();
+        }
+
+        wnds.update();
+}
+
 int main(int argc, char *argv[])
 {
         char            inkey=0,*prgdir,*curdir;
-        bool            ext;
+        bool            ext,validcfg,quit=false,bkgply=false;
 	unsigned int	opt;
+        CWindow         *focus;
+
+#ifdef DEBUG
+        f_log = fopen(DEBUG_FILE,"wt");
+#endif
 
         cout << ADPLAYVERS << ", Copyright (c) 2000 - 2002 Simon Peter <dn.tlp@gmx.net>" << endl << endl;
 
         // check that no other instance is running
 	if(!strcmp(getenv("ADPLAY"),"S")) {
 		cout << "AdPlay already running!" << endl;
-		return 3;
+                exit(1);
 	} else
                 setenv("ADPLAY","S",1); // flag our instance
 
@@ -594,6 +646,7 @@ int main(int argc, char *argv[])
 		switch(opt) {
 		case 1:	// display help
 		case 2:
+                        cout << "Usage: " << argv[0] << " [options]" << endl << endl;
 			cout << "Options can be set with '-' or '/' respectively." << endl << endl;
 			cout << " -?, -h      Display commandline help" << endl <<
 				  " -p port     Set OPL2 port" << endl <<
@@ -602,42 +655,39 @@ int main(int argc, char *argv[])
 				  " -c section  Load another configuration section" << endl <<
 				  " -b file     Immediate background playback using specified file" << endl;
 			showcursor();
-			return 0;
+                        exit(0);
 		case 3:	// set OPL2 port
 			opl.setport(atoi(argv[optind++]));
 			break;
-		case 4:	// force OPL2 flag
+                case 4: // force OPL2 port
 			oplforce = true;
 			break;
 		case 7:	// background playback
-			if(!opl.detect() && !oplforce) {
-				cout << "No OPL2 detected!" << endl;
-				showcursor();
-				return 2;
-			}
+                        bkgply = true;
+                        break;
+                }
 
-                        if(!(p = CAdPlug::factory(argv[optind],&opl))) {
-				cout << "[" << argv[optind] << "]: unsupported file type!" << endl;
-				return 1;
-			} else {
-				cout << "Background playback... (type EXIT to stop)" << endl;
-				tmInit(poll_player,0xffff,DEFSTACK);
-                                setvideoinfo(&dosvideo);
-                                _heapshrink();
-                                system(getenv("COMSPEC"));
-				tmClose();
-				delete p;
-				opl.init();
-				return 0;
-			}
-			break;
-		}
-
+        // Bail out if OPL2 not detected and not forced
 	if(!opl.detect() && !oplforce) {
 		cout << "No OPL2 detected!" << endl;
 		showcursor();
-		return 2;
+                exit(1);
 	}
+
+        /*** Background playback mode ***/
+        if(bkgply)
+                if(!(p = CAdPlug::factory(argv[optind],&opl))) {
+                        cout << "[" << argv[optind] << "]: unsupported file type!" << endl;
+                        exit(1);
+                } else {
+                        cout << "Background playback... (type EXIT to stop)" << endl;
+                        tmInit(poll_player,0xffff,DEFSTACK);
+                        _heapshrink();
+                        system(getenv("COMSPEC"));
+                        tmClose();
+                        stop();
+                        exit(0);
+                }
 
         /*** interactive (GUI) mode ***/
         getvideoinfo(&dosvideo);        // Save previous video state
@@ -647,7 +697,8 @@ int main(int argc, char *argv[])
         wnds.reg(instwnd); wnds.reg(volbars); wnds.reg(mastervol);
         wnds.reg(infownd);
 
-        loadcolors(configfile,DEFCONFIG);       // load default GUI layout
+        // load default GUI layout
+        validcfg = loadcolors(configfile,DEFCONFIG);
 
         // reparse commandline for GUI options
         optind = 1;     // reset option parser
@@ -655,26 +706,29 @@ int main(int argc, char *argv[])
 		switch(opt) {
 		case 5:	// set config file
 			strcpy(configfile,argv[optind++]);
-			loadcolors(configfile,DEFCONFIG);
+                        if(loadcolors(configfile,DEFCONFIG))
+                                validcfg = true;
 			break;
 		case 6:	// load config section
 			loadcolors(configfile,argv[optind++]);
 			break;
 		}
 
+        // bail out if no configfile could be loaded
+        if(!validcfg) {
+                cout << "No valid default GUI layout could be loaded!" << endl;
+                exit(1);
+        }
+
         // init GUI
-	prgdir = getcwd(NULL,0);
+        if(tmpfn = _tempnam(getenv("TEMP"),"_AP")) mkdir(tmpfn);
+        prgdir = getcwd(NULL,0);
         setadplugvideo();
 	tmInit(poll_player,0xffff,DEFSTACK);
-        titlebar.puts(ADPLAYVERS ", Copyright (c) 2000 - 2002 Simon Peter <dn.tlp@gmx.net>");
-	titlebar.puts("This is free software under the terms and conditions of the Nullsoft license.");
-	titlebar.puts("Refer to the file README.TXT for more information.");
-	songwnd.setcaption("Song Info"); instwnd.setcaption("No Instruments"); volbars.setcaption("VBars");
-	titlebar.setcaption(ADPLAYVERS); filesel.setcaption("Directory"); mastervol.setcaption("Vol");
-        filesel.refresh();
-	mastervol.set(63);
-	wnds.update();
-	display_help(infownd);
+        songwnd.setcaption("Song Info"); volbars.setcaption("VBars");
+	titlebar.setcaption(ADPLAYVERS); filesel.setcaption("Directory");
+        mastervol.setcaption("Vol"); filesel.refresh(); mastervol.set(63);
+        display_help(infownd); filesel.setfocus(); reset_windows();
 
 	// main loop
 	do {
@@ -685,26 +739,29 @@ int main(int argc, char *argv[])
                         refresh_volbars(volbars,opl);
 		}
 
-		if(kbhit())
+                // Check for keypress and read in, if any
+                if(kbhit()) {
 			if(!(inkey = toupper(getch()))) {
 				ext = true;
 				inkey = toupper(getch());
-
-/* Enable this if you want the currently pressed key displayed on screen */
-/*                                char teststr[10];
-                                sprintf(teststr,"%d",inkey);
-				titlebar.erase();
-				titlebar.outtext(teststr);
-                                titlebar.update(); */
 			} else
 				ext = false;
-		else
+
+                        focus = CWindow::getfocus(); // cache focused window
+                        dbg_printf("main(): Key pressed: %d %s\n",
+                                inkey, ext ? "(Ext)" : "(Norm)");
+                } else
 			inkey = 0;
 
 		if(ext)	// handle all extended keys
 			switch(inkey) {
+                        case 15:        // [Shift]+[TAB] - Back cycle windows
+                                window_cycle(true);
+                                break;
 			case 59:	// [F1] - display help
 				display_help(infownd);
+                                infownd.setfocus();
+                                wnds.update();
 				break;
 			case 60:	// [F2] - change screen layout
 				curdir = getcwd(NULL,0);
@@ -713,15 +770,32 @@ int main(int argc, char *argv[])
 				chdir(curdir);
 				free(curdir);
 				clearscreen(backcol);
+                                filesel.refresh();
 				wnds.update();
 				break;
-			case 72:	// [Up Arrow] - menu up
-				filesel.select_prev();
-				filesel.update();
+                        case 72:        // [Up Arrow] - scroll up
+                                if(focus == &filesel) {
+                                        filesel.select_prev();
+                                        filesel.update();
+                                } else if(focus == &infownd) {
+                                        infownd.scroll_up();
+                                        infownd.update();
+                                } else if(focus == &instwnd) {
+                                        instwnd.scroll_up();
+                                        instwnd.update();
+                                }
 				break;
-			case 80:	// [Down Arrow] - menu down
-				filesel.select_next();
-				filesel.update();
+                        case 80:        // [Down Arrow] - scroll down
+                                if(focus == &filesel) {
+                                        filesel.select_next();
+                                        filesel.update();
+                                } else if(focus == &infownd) {
+                                        infownd.scroll_down();
+                                        infownd.update();
+                                } else if(focus == &instwnd) {
+                                        instwnd.scroll_down();
+                                        instwnd.update();
+                                }
 				break;
 			case 75:	// [Left Arrow] - previous subsong
 				if(p && subsong) {
@@ -737,28 +811,71 @@ int main(int argc, char *argv[])
                                         last_ms = time_ms = 0.0f;
 				}
 				break;
-			case 73:	// [Page Up] - scroll up file info box
-				instwnd.scroll_up();
-				instwnd.update();
+                        case 73:        // [Page Up] - scroll up half window
+                                if(focus == &filesel) {
+                                        filesel.select_prev(filesel.getsizey() / 2);
+                                        filesel.update();
+                                } else if(focus == &infownd) {
+                                        infownd.scroll_up(infownd.getsizey() / 2);
+                                        infownd.update();
+                                } else if(focus == &instwnd) {
+                                        instwnd.scroll_up(instwnd.getsizey() / 2);
+                                        instwnd.update();
+                                }
 				break;
-			case 81:	// [Page Down] - scroll down file info box
-				instwnd.scroll_down();
-				instwnd.update();
+                        case 81:        // [Page Down] - scroll down half window
+                                if(focus == &filesel) {
+                                        filesel.select_next(filesel.getsizey() / 2);
+                                        filesel.update();
+                                } else if(focus == &infownd) {
+                                        infownd.scroll_down(infownd.getsizey() / 2);
+                                        infownd.update();
+                                } else if(focus == &instwnd) {
+                                        instwnd.scroll_down(instwnd.getsizey() / 2);
+                                        instwnd.update();
+                                }
 				break;
-			case 71:	// [Home] - scroll up info window
-				infownd.scroll_up();
-				infownd.update();
+                        case 71:        // [Home] - scroll to start
+                                if(focus == &filesel) {
+                                        filesel.setselection(0);
+                                        filesel.update();
+                                } else if(focus == &infownd) {
+                                        infownd.scroll_set(0);
+                                        infownd.update();
+                                } else if(focus == &instwnd) {
+                                        instwnd.scroll_set(0);
+                                        instwnd.update();
+                                }
 				break;
-			case 79:	// [End] - scroll down info window
-				infownd.scroll_down();
-				infownd.update();
+                        case 79:        // [End] - scroll to end
+                                if(focus == &filesel) {
+                                        filesel.setselection(0xffff);
+                                        filesel.update();
+                                } else if(focus == &infownd) {
+                                        infownd.scroll_set(0xffff);
+                                        infownd.update();
+                                } else if(focus == &instwnd) {
+                                        instwnd.scroll_set(0xffff);
+                                        instwnd.update();
+                                }
 				break;
 			}
 		else		// handle all normal keys
 			switch(inkey) {
+                        case 9:         // [TAB] - Cycle through windows
+                                window_cycle();
+                                break;
                         case 13:        // [Return] - Activate
-                                activate();
+                                if(focus == &filesel)
+                                        activate();
 				break;
+                        case 27:        // [ESC] - Stop music / Exit to DOS
+                                if(p) {
+                                        stop();
+                                        reset_windows();
+                                } else
+                                        quit = true;
+                                break;
 			case ' ':	// [Space] - fast forward
                                 fast_forward(FF_MSEC);
 				break;
@@ -776,14 +893,17 @@ int main(int argc, char *argv[])
                                 adjust_volume(+1);
 				break;
 			}
-	} while(inkey != 27);	// [ESC] - Exit to DOS
+        } while(!quit);
 
 	// deinit
 	tmClose();
-	if(p) delete p;
-	opl.init();
+        stop();
         setvideoinfo(&dosvideo);
 	chdir(prgdir);
 	free(prgdir);
-	return 0;
+        if(tmpfn) { rmdir(tmpfn); free(tmpfn); }
+#ifdef DEBUG
+        fclose(f_log);
+#endif
+        return 0;
 }

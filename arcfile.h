@@ -25,6 +25,7 @@
 
 #include <stdio.h>
 
+/* ArcFile represents a file inside an archive. */
 class ArcFile
 {
 public:
@@ -39,31 +40,41 @@ public:
         void set_name(char *fname);
 };
 
+/* archive represents an archive file (i.e. zipfiles and similar). */
 class archive
 {
 protected:
         FILE *f;
-	char *arcname;
+        char *arcname;
         unsigned int files;
         ArcFile *file[256];
 
 public:
+        // This function tries to detect the archive type of a given file
+        // and returns an initialized archive object of the right type for
+        // that file, if successful. 0 is returned otherwise.
         static archive *detect(char *filename);
 
+        // (De-)Constructors
         archive();
         virtual ~archive();
 
-        bool open(char *filename = 0);
+        // Template methods
         virtual bool read() = 0;
 
+        bool open(const char *filename);        // open and read in an archive file
+        void close();   // Close an opened archive file and deinit data
+
+        // Returns a file inside the archive
         ArcFile *getfile(unsigned int n)
         { return file[n]; };
-        unsigned int getfiles()
+        unsigned int getfiles() // Returns number of files inside the archive
         { return files; };
-	char *getarcname()
+        const char *getarcname()        // Returns the archive's filename
 	{ return arcname; };
 };
 
+/* zipfile represents a .ZIP file archive. */
 class zipfile: public archive
 {
 public:

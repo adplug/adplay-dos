@@ -13,7 +13,7 @@ OBJS = adplay.obj cfgparse.obj arcfile.obj filewnd.obj
 ##### Source distribution #####
 distfile = adply12s.zip
 DIST = adplay.cpp adplay.ini arcfile.cpp arcfile.h cfgparse.cpp cfgparse.h &
-readme.txt filewnd.cpp filewnd.h TODO build.txt
+readme.txt filewnd.cpp filewnd.h TODO build.txt helptxt.h
 
 ##### Binary distribution #####
 binarydistfile = adplay12.zip

@@ -30,8 +30,12 @@ public:
         // Errors
         enum Error { None, Drive_NotReady };
 
-        // Attributes
-        enum Attribute { File, Directory, Drive, Archive };
+        // Colors
+        enum FColor { FileSel, FileUnsel, DirSel, DirUnsel, DriveSel,
+                DriveUnsel };
+
+        static void setfilecolor(FColor c, unsigned char v);
+        static unsigned char getfilecolor(FColor c) { return fc[c]; }
 
         FileWnd();
         ~FileWnd();
@@ -45,16 +49,25 @@ public:
         archive *getarchive();
 
 private:
+        class FileItem: public Item
+        {
+        public:
+                // Attributes
+                enum Attribute { File, Directory, Drive };
+
+                unsigned int attr;
+        };
+
         Error err;
         int arcmode;
         zipfile arc;
-        char attrs[MAXITEMS];
-        unsigned long items;
         char dirprefix[PATH_MAX];
+        static unsigned char fc[];
 
         void listfiles();
         void listdrives();
         void listarc(archive &a);
         char *extract(char *newfn, archive &a, char *oldfn);
         unsigned int drivenum(char *fname);
+        void sortinsert(FileItem *newitem);
 };
