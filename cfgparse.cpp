@@ -80,7 +80,7 @@ CfgParse::~CfgParse()
 		delete [] varlist;
 	}
 
-        fclose(f);
+        if(f) fclose(f);
 
 	if(var) free(var);
 	if(val) free(val);
