@@ -1,4 +1,8 @@
 AdPlay/DOS To Do List:
 ----------------------
 - Add ARJ and RAR archive reading support.
-- Add fancy screensaver feature. [dynamite]
+- Add fancy screensaver feature.
+- Sort the layout selection window.
+- Add an option to reset the playing time on song loop.
+- Add support for seeking backwards.
+- Add a window for specifying an exact position to seek to.

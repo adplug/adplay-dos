@@ -89,7 +89,7 @@ CfgParse::~CfgParse()
 
 bool CfgParse::section(const char *name)
 {
-        dbg_printf("section {\n");
+        dbg_printf("section(%s) {\n", name);
 
         reparse();
 
@@ -108,7 +108,7 @@ bool CfgParse::subsection(const char *name, const char *nsec)
 {
         char tmpsection[MAXINIITEM];
 
-        dbg_printf("subsection {\n");
+        dbg_printf("subsection(%s, %s) {\n", name, nsec);
 
         // Rewind current section first
         if(!nsec)
@@ -253,8 +253,8 @@ bool CfgParse::parse_line()
 		} while(!feof(f) && iniline[i - 1] != '\n');
 
                 linenum++; iniline[i - 1] = '\0';
-		dbg_printf("%i - \"%s\"\n", linenum, iniline);
-        } while(empty(iniline));
+//		dbg_printf("%i - \"%s\"\n", linenum, iniline);
+        } while(empty(iniline) && !feof(f));
 
         // Return error on EOF
         if(feof(f)) {
