@@ -3,32 +3,31 @@ Portable Textmode Window Classes + Console output library
 version 1.0
 
 Description
-
-	This package contains portable window classes especially
+-----------
+This package contains portable window classes especially
 designed for textmode usage + the necessary console output
 library.
 
 Window Classes
-
-	For the moment, there are the following window classes:
+--------------
+For the moment, there are the following window classes:
 CWindow	: Basic framed window w/o any behaviours
 CTxtWnd	: Window that contains text
 CListWnd	: Listbox that can have one item selected
 CBarWnd	: Window containing vertical bar(s)
 
-	The classes can be inherited to extend their
-functionality.
+The classes can be inherited to extend their functionality.
 
 Output Library
+--------------
+The output library provides hardware console output and some
+special features, like cursor on/off, clear screen and video
+mode selection.
 
-	The output library provides hardware console output and
-some special features, like cursor on/off, clear screen
-and video mode selection.
-
-	The library is WATCOM C dependant.
+The library is WATCOM C dependant.
 
 Legal
-
+-----
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
 arising from the use of this software.

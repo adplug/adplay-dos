@@ -3,9 +3,7 @@
                €    ‹€ €€    €€ €€       €€      €    ‹€    ‹€
                €     € €€‹‹‹‹‹ﬂ €€       €€‹‹‹‹‹ €     €    €€
 
-AdPlay v1.0 by Simon Peter (dn.tlp@gmx.net) et al.
-- MID, CMF, LAA & SCI replayer by Phil Hassey (philhassey@hotmail.com)
-- many file format docs supplied by Death Adder (death-adder@juno.com)
+AdPlay/DOS v1.1, (c) 2001 Simon Peter <dn.tlp@gmx.net>, et al.
 
 Website: http://adplug.sourceforge.net/dos.shtml
 
@@ -16,41 +14,6 @@ programmed textmode interface, it provides a convenient playback
 experience. As opposed to AdPlug's capability to replay through
 an OPL2 emulator, AdPlay requires an installed OPL2 audio board
 for song replay.
-
-Supported formats:
-------------------
-AdPlay implements unique file replayers for each supported format in order to
-achieve the best possible playback quality. Below is a list of all currently
-supported file formats along with information about possible replay issues.
-
-- A2M: AdLib Tracker 2 by subz3ro
-  - Unimplemented commands (version 1-4): FF1 - FF9, FAx - FEx
-  - Unimplemented commands (version 5-8): Gxy, Hxy, Kxy - &xy
-  - In version 5-8 files, instrument panning & the flags byte is ignored
-  - Only SixPack or uncompressed files are supported
-- AMD: AMUSIC Adlib Tracker by Elyssis
-- CMF: Creative Music File Format by Creative Technology
-  - Unimplemented: AdLib rhythm mode
-- D00: EdLib by Vibrants
-  - Bugs: Hard restart SR sometimes sound wrong
-- HSC: HSC Adlib Composer by Hannes Seifert, HSC-Tracker by Electronic Rats
-- HSP: HSC Packed by Number Six / Aegis Corp.
-- IMF: Apogee IMF File Format
-- KSM: Ken Silverman's Music Format
-- LAA: LucasArts AdLib Audio File Format by LucasArts
-  - Bugs: Some volumes are a bit off
-- MID: MIDI Audio File Format
-- MTK: MPU-401 Trakker by SuBZeR0
-- S3M: Screamtracker 3 by Future Crew
-  - Bugs: Extra Fine Slides (EEx, FEx) & Fine Vibrato (Uxy) are inaccurate
-- SCI: Sierra's AdLib Audio File Format
-  - Bugs: Some instruments are messed up
-- SNG: SNGPlay by BUGSY of OBSESSION
-- RAD: Reality ADlib Tracker by Reality
-- RAW: RdosPlay RAW file format by RDOS
-  - Unimplemented: OPL3 register writes (not possible with AdLib)
-- SA2: Surprise! Adlib Tracker 2 by Surprise! Productions
-  - Unimplemented: Version 7 files (i don't have any)
 
 Usage:
 ------
@@ -93,11 +56,27 @@ player while within real DOS.
 
 Legal:
 ------
-AdPlay is released under the terms and conditions of the LGPL. A recent copy
-of the LGPL can be found at http://www.gnu.org/copyleft/lesser.html.
+This software is provided 'as-is', without any express or implied
+warranty.  In no event will the authors be held liable for any damages
+arising from the use of this software.
+
+Permission is granted to anyone to use this software for any purpose,
+including commercial applications, and to alter it and redistribute it
+freely, subject to the following restrictions:
+
+1. The origin of this software must not be misrepresented; you must not
+   claim that you wrote the original software. If you use this software
+   in a product, an acknowledgment in the product documentation would be
+   appreciated but is not required.
+2. Altered source versions must be plainly marked as such, and must not be
+   misrepresented as being the original software.
+3. This notice may not be removed or altered from any source distribution.
 
 Release History:
 ----------------
+- v1.1 (2001-10-17)
+  - Linked with AdPlug 1.1, excluding U6M player
+  - .ZIP file reading support
 - v1.0 (2001-06-30)
   - AdPlay is open-source now!
   - Using PMODE/W stub
@@ -105,4 +84,4 @@ Release History:
   - New timer routine
   - New, customizable screen layout
 - v1.0 BETA (2001-02-17)
-  - First beta release.
+  - First beta release
