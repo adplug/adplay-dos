@@ -1,5 +1,5 @@
 /*
- * arcfile.h - Archive file handling
+ * filewnd.h - Small File Manager for DOS w/ archive support
  * Copyright (c) 2002 Simon Peter <dn.tlp@gmx.net>
  *
  * This software is provided 'as-is', without any express or implied
@@ -17,58 +17,44 @@
  * 2. Altered source versions must be plainly marked as such, and must not be
  *    misrepresented as being the original software.
  * 3. This notice may not be removed or altered from any source distribution.
- *
  */
 
-#ifndef H_ARCFILE
-#define H_ARCFILE
+#include <dos.h>
+#include <window/window.h>
 
-#include <stdio.h>
+#include "arcfile.h"
 
-class ArcFile
+class FileWnd: public CListWnd
 {
 public:
-        enum Attributes { None = 0, Directory = 1 };
+        // Errors
+        enum Error { None, Drive_NotReady };
 
-        char *name;
-        unsigned long attr;
+        // Attributes
+        enum Attribute { File, Directory, Drive, Archive };
 
-        ArcFile();
-        ~ArcFile();
+        FileWnd();
+        ~FileWnd();
 
-        void set_name(char *fname);
+        void refresh();
+        bool select();
+
+        Error geterror();
+        char *getfilename(char *fn);
+        bool inarchive();
+        archive *getarchive();
+
+private:
+        Error err;
+        int arcmode;
+        zipfile arc;
+        char attrs[MAXITEMS];
+        unsigned long items;
+        char dirprefix[PATH_MAX];
+
+        void listfiles();
+        void listdrives();
+        void listarc(archive &a);
+        char *extract(char *newfn, archive &a, char *oldfn);
+        unsigned int drivenum(char *fname);
 };
-
-class archive
-{
-protected:
-        FILE *f;
-	char *arcname;
-        unsigned int files;
-        ArcFile *file[256];
-
-public:
-        static archive *detect(char *filename);
-
-        archive();
-        virtual ~archive();
-
-        bool open(char *filename = 0);
-        virtual bool read() = 0;
-
-        ArcFile *getfile(unsigned int n)
-        { return file[n]; };
-        unsigned int getfiles()
-        { return files; };
-	char *getarcname()
-	{ return arcname; };
-};
-
-class zipfile: public archive
-{
-public:
-        static zipfile *factory(char *filename);
-        bool read();
-};
-
-#endif

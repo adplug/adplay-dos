@@ -1,18 +1,68 @@
 /*
- * cfgparse.cpp - Config file parser, by Simon Peter (dn.tlp@gmx.net)
+ * cfgparse.cpp - Config file parser
+ * Copyright (c) 2001, 2002 Simon Peter <dn.tlp@gmx.net>
+ *
+ * This software is provided 'as-is', without any express or implied
+ * warranty.  In no event will the authors be held liable for any damages
+ * arising from the use of this software.
+ *
+ * Permission is granted to anyone to use this software for any purpose,
+ * including commercial applications, and to alter it and redistribute it
+ * freely, subject to the following restrictions:
+ *
+ * 1. The origin of this software must not be misrepresented; you must not
+ *    claim that you wrote the original software. If you use this software
+ *    in a product, an acknowledgment in the product documentation would be
+ *    appreciated but is not required.
+ * 2. Altered source versions must be plainly marked as such, and must not be
+ *    misrepresented as being the original software.
+ * 3. This notice may not be removed or altered from any source distribution.
  */
 
-#include <fstream.h>
-#include <string.h>
+#include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
+#include <stdarg.h>
+
+// Define this for debug mode
+//#define DEBUG
+
+#ifdef DEBUG
+#define DEBUG_FILE      "debug.log"     // File to log to
+
+static FILE *f_log;
+
+void dbg_printf(char *fmt, ...)
+{
+        char logbuffer[256];
+
+        // build debug log string
+        va_list argptr;
+        va_start(argptr, fmt);
+        vsprintf(logbuffer, fmt, argptr);
+        va_end(argptr);
+
+        // print out log line
+        fprintf(f_log,logbuffer);
+}
+#else
+void dbg_printf(char *fmt, ...) { }
+#endif
 
 #include "cfgparse.h"
 
 CfgParse::CfgParse(char *cfgfile)
-	: cf(cfgfile, ios::in | ios::nocreate), delim('\n'), varlist(0), err(ERR_NONE)
+        : varlist(0), err(None), linenum(0)
 {
-	if(!cf.is_open())
-		err = ERR_NOTFOUND;
+#ifdef DEBUG
+        f_log = fopen(DEBUG_FILE,"at");
+        dbg_printf("CfgParse: created, using \"%s\"!\n",cfgfile);
+#endif
+
+        if(!(f = fopen(cfgfile,"rt"))) {
+                dbg_printf("CfgParse: File not found\n");
+                err = NotFound;
+        }
 }
 
 CfgParse::~CfgParse()
@@ -24,137 +74,203 @@ CfgParse::~CfgParse()
 			delete [] varlist[i];
 		delete [] varlist;
 	}
+
+        fclose(f);
+
+#ifdef DEBUG
+        dbg_printf("~CfgParse: destroyed!\n\n");
+        fclose(f_log);
+#endif
 }
 
 bool CfgParse::section(char *name)
 {
-	char secline[MAXINILINE],var[MAXINILINE],*dummy;
+        dbg_printf("section {\n");
 
-	strcpy(cursec,name);
-	cf.seekg(0);
-	do {				// search section
-		cf.getline(secline,MAXINILINE,delim);
-		sscanf(secline," [%s",var);
-		dummy = strrchr(var,']');
-		*dummy = '\0';
-	} while(strcmp(name,var) && !cf.eof());
-	if(strcmp(name,var))
-		return false;	// section not found
-	else {
-		err = ERR_NONE;
-		return true;	// section found
-	}
+        reparse();
+
+        do {
+                do {
+                        if(!parse_line()) return false;
+                } while(err != NextSection);
+        } while(stricmp(name,cursection));
+
+        dbg_printf("}: Section found! (Error::None)\n");
+        err = None;
+        return true;
 }
 
-bool CfgParse::subsection(char *name)
+bool CfgParse::subsection(char *name, char *nsec)
 {
-	char secline[MAXINILINE],var[MAXINILINE],*dummy;
+        char tmpsection[MAXINIITEM];
 
-	section(cursec);
-	do {				// search section
-		cf.getline(secline,MAXINILINE,delim);
-		sscanf(secline," (%s",var);
-		dummy = strrchr(var,')');
-		*dummy = '\0';
-	} while(strcmp(name,var) && !cf.eof() && !strchr(secline,'['));
-	if(strchr(var,'[')) {
-		err = ERR_NEXTSECTION;
-		return false;
-	}
-	if(strcmp(name,var)) {
-		err = ERR_NOTFOUND;
-		return false;	// section not found
-	} else {
-		err = ERR_NONE;
-		return true;	// section found
-	}
-}
+        dbg_printf("subsection {\n");
 
-void CfgParse::config(char ndelim)
-{
-	delim = ndelim;
+        // Rewind current section first
+        if(!nsec)
+                strcpy(tmpsection,cursection);
+        else
+                strcpy(tmpsection,nsec);
+        section(tmpsection);
+
+        do {
+                do {
+                        if(!parse_line()) return false;
+                        if(err == NextSection) return false;
+                } while(err != NextSubsection);
+        } while(stricmp(name,cursubsection));
+
+        dbg_printf("}: Subsection found! (Error::None)\n");
+        err = None;
+        return true;
 }
 
 void CfgParse::enum_vars(char *vars)
 {
-	char			*pos;
+        char            *pos;
 	unsigned int	i=0;
 
+        // count number of submitted variables for easy malloc()'ing, later
 	items=0;
 	for(pos=vars;*pos;pos+=strlen(pos)+1)
 		items++;
 
-	varlist = new char*[items];
-
+        // Initialize our own variable list with the submitted variables
+        varlist = new char*[items];     // get memory
 	for(pos=vars;*pos;pos+=strlen(pos)+1) {
 		varlist[i] = new char[strlen(pos)+1];
 		strcpy(varlist[i],pos);
 		i++;
 	}
+
+        dbg_printf("enum_vars: %d Variables enumerated\n",items);
 }
 
 unsigned int CfgParse::peekvar()
 {
-	char			var[MAXINILINE];
-	unsigned int	i;
+        unsigned int i;
 
-	cf >> var; cf.ignore(MAXINILINE,'=');
+        dbg_printf("peekvar {\n");
+        err = None;
 
-	if(strchr(var,'[')) {
-		err = ERR_NEXTSECTION;
-		return items+1;
-	}
+        parse_line();
+        if(err) return items+1;         // exit on error
 
-	for(i=0;i<items;i++)
-		if(!strcmp(var,varlist[i]))
-			return i;
+        dbg_printf("}: ");
 
-	err = ERR_NOTFOUND;
-	return items+1;
+        // Check if variable is in our list
+        for(i=0;i<items;i++)
+                if(!stricmp(var,varlist[i])) {
+                        dbg_printf("Variable number: %d\n",i);
+                        return i;
+                }
+
+        // Variable not in our list!
+        dbg_printf("Invalid variable! (Error::Invalid)\n");
+        err = Invalid;
+        return items+1;
 }
 
-int CfgParse::readint()
+long CfgParse::readlong()
 {
-	int val;
+        long l;
 
-	cf >> val;
-	return val;
+        sscanf(val,"%li",&l);
+        return l;
 }
 
-unsigned int CfgParse::readuint()
+unsigned long CfgParse::readulong()
 {
-	unsigned int val;
+        unsigned long ul;
 
-	cf >> val;
-	return val;
+        sscanf(val,"%lu",&ul);
+        return ul;
 }
 
-char *CfgParse::readstr(char *val)
+char *CfgParse::readstr(char *str)
 {
-	cf >> val;
-	return val;
+        strcpy(str,val);
+        return str;
 }
 
 char CfgParse::readchar()
 {
-	char val;
-
-	cf >> val;
-	return val;
+        return (*val);
 }
 
 bool CfgParse::readbool()
 {
-	char val[MAXINILINE];
-
-	cf >> val;
-	if(!strcmp(val,"Yes") || !strcmp(val,"True"))
+        if(!stricmp(val,"yes") || !stricmp(val,"true"))
 		return true;
-	else
+        else
 		return false;
 }
 
-unsigned int CfgParse::geterror()
+CfgParse::Error CfgParse::geterror()
 {
 	return err;
+}
+
+bool CfgParse::empty(char *str)
+// Returns true, if 'str' contains only whitespace
+{
+        unsigned int i;
+
+        for(i=0;i<strlen(str);i++)
+                if(str[i] != ' ' && str[i] != '\n' && str[i] != '\r' &&
+                        str[i] != '\t')
+                        return false;
+
+        return true;
+}
+
+bool CfgParse::parse_line()
+// Parse the next valid config file line and assign variables
+{
+        char iniline[MAXINILINE], *dummy;
+
+        err = None;
+        dbg_printf("parse_line: ");
+
+        // read in next non-whitespace line
+        do {
+                if(feof(f)) break;
+                fgets(iniline,MAXINILINE,f); linenum++;    // read line
+        } while(empty(iniline));
+
+        // Return error on EOF
+        if(feof(f)) {
+                dbg_printf("End of file (Error::eof)\n");
+                err = eof;
+                return false;
+        }
+
+        // parse line
+        dbg_printf("(%d) ",linenum);
+        if(sscanf(iniline,"[%s]",cursection)) {
+                dummy = strrchr(cursection,']'); *dummy = '\0';
+                dbg_printf("[%s] (Error::NextSection)\n",cursection);
+                err = NextSection;
+                return true;
+        }
+        if(sscanf(iniline,"(%s)",cursubsection)) {
+                dummy = strrchr(cursubsection,')'); *dummy = '\0';
+                dbg_printf("(%s) (Error::NextSubsection)\n",cursubsection);
+                err = NextSubsection;
+                return true;
+        }
+        if(sscanf(iniline,"%s = %s",var,val)) {
+                dbg_printf("<%s> = <%s>\n",var,val);
+                return true;
+        }
+
+        dbg_printf("Junk detected! (Error::Invalid)\n");
+        err = Invalid;
+        return false;
+}
+
+void CfgParse::reparse()
+{
+        rewind(f);
+        linenum = 0;
 }

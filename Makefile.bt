@@ -6,9 +6,9 @@ CPPFLAGS = -dstd= -dstring=String	# trick std::string into WATCOM's String()
 
 OUTPUT = adplay.exe
 LIBRARIES = window.lib timer.lib adplug.lib
-OBJS = adplay.obj cfgparse.obj arcfile.obj
+OBJS = adplay.obj cfgparse.obj arcfile.obj filewnd.obj
 DIST = adplay.cpp adplay.ini arcfile.cpp arcfile.h cfgparse.cpp cfgparse.h &
-readme.txt
+readme.txt filewnd.cpp filewnd.h TODO
 BINARYDIST = adplay.exe adplay.ini readme.txt
 SYSTEM = pmodew
 

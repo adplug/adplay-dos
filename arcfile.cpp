@@ -1,59 +1,124 @@
 /*
- * arcfile.cpp - Archive file handling, by Simon Peter (dn.tlp@gmx.net)
+ * arcfile.cpp - Archive file handling
+ * Copyright (c) 2002 Simon Peter <dn.tlp@gmx.net>
+ *
+ * This software is provided 'as-is', without any express or implied
+ * warranty.  In no event will the authors be held liable for any damages
+ * arising from the use of this software.
+ *
+ * Permission is granted to anyone to use this software for any purpose,
+ * including commercial applications, and to alter it and redistribute it
+ * freely, subject to the following restrictions:
+ *
+ * 1. The origin of this software must not be misrepresented; you must not
+ *    claim that you wrote the original software. If you use this software
+ *    in a product, an acknowledgment in the product documentation would be
+ *    appreciated but is not required.
+ * 2. Altered source versions must be plainly marked as such, and must not be
+ *    misrepresented as being the original software.
+ * 3. This notice may not be removed or altered from any source distribution.
+ *
  */
 
-#include <fstream.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "arcfile.h"
 
-zipfile::zipfile(char *filename): arcname(0)
+/***** ArcFile *****/
+
+ArcFile::ArcFile(): name(0), attr(None)
 {
-	if(filename)
-		open(filename);
 }
 
-zipfile::~zipfile()
+ArcFile::~ArcFile()
 {
-	for(unsigned int i=0;i<names;i++)
-		delete [] fname[i];
-	if(arcname)
-		delete [] arcname;
+        if(name) delete [] name;
 }
 
-bool zipfile::open(char *filename)
+void ArcFile::set_name(char *fname)
 {
-	ifstream f(filename);
+        name = new char[strlen(fname)+1];
+        strcpy(name,fname);
+}
+
+/***** archive *****/
+
+archive::archive(): arcname(0)
+{
+}
+
+archive::~archive()
+{
+        for(unsigned int i=0;i<files;i++) delete file[i];
+        if(arcname) delete [] arcname;
+}
+
+bool archive::open(char *filename)
+{
+        f = fopen(filename,"rb");
 	arcname = new char [strlen(filename)+1];
 	strcpy(arcname,filename);
-	return open(f);
+        return read();
 }
 
-bool zipfile::open(ifstream &f)
+archive *archive::detect(char *filename)
+{
+        return zipfile::factory(filename);
+}
+
+/***** zipfile *****/
+
+static zipfile *zipfile::factory(char *filename)
+{
+        zipfile *a = new zipfile;
+
+        if(a->open(filename))
+                return a;
+        else {
+                delete a;
+                return 0;
+        }
+}
+
+bool zipfile::read()
 {
 #pragma pack(1)
 	struct {
-		char id[4];
+                unsigned long id;
 		char dummy[14];
 		unsigned long cmpsize,fsize;
-		unsigned short flen,xlnlen;
+                unsigned short fnlen,xlen;
 	} fhead;
 #pragma pack()
-	unsigned long fpos=0;
 
-	for(names=0;!f.eof();names++) {
-		f.read((char *)&fhead,sizeof(fhead));
-		if(strncmp(fhead.id,"PK\x03\x04",4) || !fhead.flen)
-			break;
-		fname[names] = new char[fhead.flen + 1];
-		f.read(fname[names],fhead.flen);
-		fname[names][fhead.flen] = '\0';
-		fpos += sizeof(fhead)+fhead.flen+fhead.xlnlen+fhead.cmpsize;
-		f.seekg(fpos);
+        // Read local file headers
+        for(files=0;!feof(f);files++) {
+                fread(&fhead,sizeof(fhead),1,f);  // read local file header
+
+                // End of local file headers (central directory begins)
+                if(fhead.id == 0x02014b50) return true;
+                // Not a local file header
+                if(fhead.id != 0x04034b50) return false;
+
+                // Allocate new file object
+                file[files] = new ArcFile;
+
+                // Read file name
+                file[files]->name = new char[fhead.fnlen + 1];
+                fread(file[files]->name,fhead.fnlen,1,f);
+                file[files]->name[fhead.fnlen] = '\0';
+
+                // Set file attributes
+                // Directory entry
+                if(file[files]->name[fhead.fnlen-1] == '/') {
+                        file[files]->attr |= ArcFile::Directory;
+                        file[files]->name[fhead.fnlen-1] = '\0';
+                }
+
+                // Seek to next local file header
+                fseek(f,fhead.xlen+fhead.cmpsize,SEEK_CUR);
 	}
 
-	if(names)
-		return true;
-	else
-		return false;
+        return false;   // Prematurely reached end of file
 }
