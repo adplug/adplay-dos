@@ -365,7 +365,7 @@ void refresh_songdesc(CTxtWnd &w)
 {
 	w.erase();
 	w.setcaption("Song Message");
-        if(p) w.puts(p->getdesc());
+        if(p) w.puts(p->getdesc().c_str());
 	w.update();
         in_help = false;
 }
@@ -513,9 +513,9 @@ void play(char *fn)
 
         // Update titlebar
         titlebar.erase();
-        titlebar.outtext("File Type: "); titlebar.puts(p->gettype());
-        titlebar.outtext("Title    : "); titlebar.puts(p->gettitle());
-        titlebar.outtext("Author   : "); titlebar.puts(p->getauthor());
+        titlebar.outtext("File Type: "); titlebar.puts(p->gettype().c_str());
+        titlebar.outtext("Title    : "); titlebar.puts(p->gettitle().c_str());
+        titlebar.outtext("Author   : "); titlebar.puts(p->getauthor().c_str());
         titlebar.update();
 
         refresh_songdesc(infownd);      // Update "Song Info" window
@@ -525,7 +525,7 @@ void play(char *fn)
         for(i=0;i<p->getinstruments();i++) {
                 sprintf(ins,"%3d³",i+1);
                 instwnd.outtext(ins);
-                instwnd.puts(p->getinstrument(i));
+                instwnd.puts(p->getinstrument(i).c_str());
         }
         sprintf(ins,"%d Instruments",p->getinstruments());
         instwnd.setcaption(ins);

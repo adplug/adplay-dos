@@ -2,7 +2,6 @@
 # Copyright (c) 2001, 2002 Simon Peter <dn.tlp@gmx.net>
 
 LDFLAGS = OP ST=32k
-CPPFLAGS = -dstd= -dstring=String	# trick std::string into WATCOM's String()
 
 OUTPUT = adplay.exe
 SYSTEM = pmodew
