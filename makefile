@@ -52,7 +52,9 @@ players.lib: .autodepend
 	$(CPP) $(CPPOP) $(DEFINES) $(ADPLUGPATH)\players\sng.cpp
 	$(CPP) $(CPPOP) $(DEFINES) $(ADPLUGPATH)\players\mkj.cpp
 	$(CPP) $(CPPOP) $(DEFINES) $(ADPLUGPATH)\players\dfm.cpp
-	$(LIB) -n -b players.lib +protrack +a2m +amd +d00 +hsc +hsp +imf +mtk +rad +raw +s3m +sa2 +mid +sng +ksm  +mkj +dfm
+	$(CPP) $(CPPOP) $(DEFINES) $(ADPLUGPATH)\players\lds.cpp
+	$(CPP) $(CPPOP) $(DEFINES) $(ADPLUGPATH)\players\bam.cpp
+	$(LIB) -n -b players.lib +protrack +a2m +amd +d00 +hsc +hsp +imf +mtk +rad +raw +s3m +sa2 +mid +sng +ksm  +mkj +dfm +lds +bam
 
 clean: .symbolic
 	del *.obj
