@@ -1,5 +1,5 @@
 /*
- * AdPlay - AdPlug DOS Player, by Simon Peter (dn.tlp@gmx.net)
+ * AdPlay - AdPlug DOS Frontend, by Simon Peter (dn.tlp@gmx.net)
  */
 
 #include <iostream.h>
@@ -14,14 +14,11 @@
 
 #include "txtgfx.h"
 #include "window.h"
-
 #include "timer.h"
-/*#define std
-#define string	String */
-#include "adplug.h"
-#include "realopl.h"
+#include "bars.h"
 
-#define timer_newfreq(freq)	tmSetNewRate((int)(1192737/freq))
+#include "adplug.h"
+#include "analopl.h"
 
 // global defines
 #define ADPLAYVERS	"AdPlay v1.0"	// AdPlay version string
@@ -32,24 +29,43 @@
 #define COLORFILE		"colors.ini"	// filename of colors definition file
 
 // global variables
-CPlayer		*p = 0;
-bool			playing = false;
-CTxtWnd		titlebar(70,3,0,0);
-CListWnd		filesel(19,20,0,4);
-CTxtWnd		infownd(54,20,21,4);
-unsigned char	backcol=7;
+CPlayer			*p=0;
+bool				playing=false;
+CTxtWnd			titlebar(80,5,0,0),infownd(61,20,19,5),songwnd(25,8,55,42),instwnd(36,25,19,25);
+CListWnd			filesel(19,45,0,5);
+CBarWnd			volbars(9,63),mastervol(1,63);
+unsigned char		backcol=7;
+
+extern void wait_retrace(void);
+#pragma aux wait_retrace = \
+	"mov dx,03dah" \
+"nope: in al,dx" \
+	"test al,8" \
+	"jz nope" \
+"yepp: in al,dx" \
+	"test al,8" \
+	"jnz yepp" \
+	modify [al dx];
 
 void poll_player(void)
 {
-	static float oldfreq=1;
+	static float		oldfreq=0.0f;
+	static unsigned int	del=0,wait=0;
 
 	if(!playing)
 		return;
 
+	if(del) {
+		del--;
+		return;
+	} else
+		del = wait;
+
 	p->update();
 	if(oldfreq != p->getrefresh()) {
 		oldfreq = p->getrefresh();
-		timer_newfreq(oldfreq);
+		del = wait = 18.2f / oldfreq;
+		tmSetNewRate(1192737/(oldfreq*(wait+1)));
 	}
 }
 
@@ -97,14 +113,16 @@ void display_help(CTxtWnd &w)
 {
 	w.clear();
 	w.setcaption("Help");
-	w.puts("Keyboard Control:\n\n"
+	w.puts("Keyboard Control:\n"
+		 "-----------------\n\n"
 		 "Up/Down   - Select in Menu\n"
-		 "PgUp/PgDn - Scroll Info Window\n"
+		 "PgUp/PgDn - Scroll Instrument Names Window\n"
 		 "ESC       - Exit to DOS\n"
 		 "F1        - Help\n"
 		 "D         - Shell to DOS\n"
 		 "C         - Change Colormap\n"
-		 "I         - Refresh Song Info");
+		 "M         - Display Song Message\n"
+		 "+/-       - Volume Up/Down");
 	w.redraw();
 }
 
@@ -140,16 +158,16 @@ bool loadcolors(char *fn, char *section)
 	do {					// parse section entries
 		f >> var; f.ignore(MAXINILINE,'='); f >> val;
 		if(!strcmp(var,"Background")) backcol = val;
-		if(!strcmp(var,"titleBorder")) titlebar.setcolor(titlebar.colBorder,val);
-		if(!strcmp(var,"titleIn")) titlebar.setcolor(titlebar.colIn,val);
-		if(!strcmp(var,"titleCaption")) titlebar.setcolor(titlebar.colCaption,val);
-		if(!strcmp(var,"fileselBorder")) filesel.setcolor(filesel.colBorder,val);
-		if(!strcmp(var,"fileselSelect")) filesel.setcolor(filesel.colSelect,val);
-		if(!strcmp(var,"fileselUnselect")) filesel.setcolor(filesel.colUnselect,val);
-		if(!strcmp(var,"fileselCaption")) filesel.setcolor(filesel.colCaption,val);
-		if(!strcmp(var,"infowndBorder")) infownd.setcolor(infownd.colBorder,val);
-		if(!strcmp(var,"infowndIn")) infownd.setcolor(titlebar.colIn,val);
-		if(!strcmp(var,"infowndCaption")) infownd.setcolor(infownd.colCaption,val);
+		if(!strcmp(var,"titleBorder")) titlebar.setcolor(titlebar.Border,val);
+		if(!strcmp(var,"titleIn")) titlebar.setcolor(titlebar.In,val);
+		if(!strcmp(var,"titleCaption")) titlebar.setcolor(titlebar.Caption,val);
+		if(!strcmp(var,"fileselBorder")) filesel.setcolor(filesel.Border,val);
+		if(!strcmp(var,"fileselSelect")) filesel.setcolor(filesel.Select,val);
+		if(!strcmp(var,"fileselUnselect")) filesel.setcolor(filesel.Unselect,val);
+		if(!strcmp(var,"fileselCaption")) filesel.setcolor(filesel.Caption,val);
+		if(!strcmp(var,"infowndBorder")) infownd.setcolor(infownd.Border,val);
+		if(!strcmp(var,"infowndIn")) infownd.setcolor(infownd.In,val);
+		if(!strcmp(var,"infowndCaption")) infownd.setcolor(infownd.Caption,val);
 	} while(!strchr(var,'[') && !f.eof());
 
 	return true;
@@ -192,7 +210,6 @@ void select_colors()
 			case 13:	// [Return] - select colorsheme
 				loadcolors(COLORFILE,colwnd.getitem(colwnd.getselection()));
 				clearscreen(backcol);
-				titlebar.redraw();
 				filesel.redraw();
 				if(playing)
 					infownd.redraw();
@@ -203,29 +220,47 @@ void select_colors()
 
 void refresh_songinfo(CTxtWnd &w)
 {
-	char			tmpstr[80];
-	unsigned int	i;
+	char			tmpstr[80],*title = new char [p->gettitle().length()+1];
 
 	w.clear();
-	w.outtext("File Type: "); w.puts(p->gettype());
-	w.outtext("Author: "); w.puts(p->getauthor() + "\n");
-	sprintf(tmpstr,"Position: %d / %d",p->getorder(),p->getorders()); w.puts(tmpstr);
-	sprintf(tmpstr,"Pattern: %d / %d",p->getpattern(),p->getpatterns()); w.puts(tmpstr);
-	sprintf(tmpstr,"Row: %d",p->getrow()); w.puts(tmpstr);
-	sprintf(tmpstr,"Speed: %d",p->getspeed()); w.puts(tmpstr);
-	sprintf(tmpstr,"Timer: %.2f Hz",p->getrefresh()); w.puts(tmpstr);
+	sprintf(tmpstr,"Position   : %d / %d",p->getorder(),p->getorders()); w.puts(tmpstr);
+	sprintf(tmpstr,"Pattern    : %d / %d",p->getpattern(),p->getpatterns()); w.puts(tmpstr);
+	sprintf(tmpstr,"Row        : %d",p->getrow()); w.puts(tmpstr);
+	sprintf(tmpstr,"Speed      : %d",p->getspeed()); w.puts(tmpstr);
+	sprintf(tmpstr,"Timer      : %.2f Hz",p->getrefresh()); w.puts(tmpstr);
 	sprintf(tmpstr,"Instruments: %d\n",p->getinstruments()); w.puts(tmpstr);
-	w.puts("Instrument Names:");
-	for(i=0;i<p->getinstruments();i++)
-		w.puts(p->getinstrument(i));
+	w.redraw();
+}
+
+void refresh_songdesc(CTxtWnd &w)
+{
+	w.clear();
+	w.setcaption("Song Message");
+	w.puts(p->getdesc());
+	w.redraw();
+}
+
+void refresh_volbars(CBarWnd &w, CAnalopl &opl)
+{
+	unsigned int i;
+
+	for(i=0;i<9;i++) {
+		if(opl.getkeyon(i))
+			w.set(63 - opl.getcarriervol(i),i);
+		else
+			if(w.get(i))
+				w.set(w.get(i)-1,i);
+	}
+	w.redraw();
 }
 
 int main(int argc, char *argv[])
 {
 	CAdPlug		ap;
-	CRealopl		opl(DEFPORT);
+	CAnalopl		opl(DEFPORT);
 	char			inkey=0,*prgdir,*curdir;
-	bool			ext,analyzer=false,sinfo=false;
+	bool			ext;
+	unsigned char	volume=0;
 
 	cout << ADPLAYVERS << ", (c) 2000 - 2001 Simon Peter (dn.tlp@gmx.net)" << endl;
 
@@ -254,27 +289,36 @@ int main(int argc, char *argv[])
 	// init
 	prgdir = getcwd(NULL,0);
 	loadcolors(COLORFILE,"default");
-	tmInit(poll_player,0xffff,DEFSTACK);
 	setvideomode(3);
-	clearscreen(backcol);
+	load88font();
 	hidecursor();
+	clearscreen(backcol);
+	tmInit(poll_player,0xffff,DEFSTACK);
+	titlebar.clear(); songwnd.clear(); infownd.clear(); instwnd.clear();
+	titlebar.puts(ADPLAYVERS ", (c) 2000 - 2001 by Simon Peter (dn.tlp@gmx.net) et al.");
+	titlebar.puts("Look into the README file for additional author information.");
+	titlebar.puts("This is free software under the terms and conditions of the LGPL.");
 	titlebar.setcaption(ADPLAYVERS);
-	titlebar.puts("     " ADPLAYVERS ", (c) 2000 - 2001 Simon Peter (dn.tlp@gmx.net)");
-	titlebar.centerx();
 	titlebar.redraw();
 	filesel.setcaption("File Selector");
 	listfiles(filesel);
 	filesel.redraw();
+	songwnd.setcaption("Song Info");
+	instwnd.setcaption("Instrument Names");
+	volbars.setcaption("VBars");
+	mastervol.setcaption("Main Vol");
+	volbars.resize(11,17); volbars.setxy(55,25);
+	mastervol.resize(14,17); mastervol.setxy(66,25); mastervol.set(63);
+	songwnd.redraw(); instwnd.redraw(); volbars.redraw(); mastervol.redraw();
+	display_help(infownd);
 
 	// main loop
 	do {
-		if(analyzer) {		// display spectrum analyzer
-			// speccy code here...
-		}
+		wait_retrace();
 
-		if(sinfo && playing) {	// auto-update song info
-			refresh_songinfo(infownd);
-			infownd.redraw();
+		if(playing) {	// auto-update windows
+			refresh_songinfo(songwnd);
+			refresh_volbars(volbars,opl);
 		}
 
 		if(kbhit())
@@ -290,7 +334,6 @@ int main(int argc, char *argv[])
 			switch(inkey) {
 			case 59:	// [F1] - display help
 				display_help(infownd);
-				sinfo = false;
 				break;
 			case 72:	// [Up Arrow] - menu up
 				filesel.select_prev();
@@ -301,12 +344,12 @@ int main(int argc, char *argv[])
 				filesel.redraw();
 				break;
 			case 73:	// [Page Up] - scroll up file info box
-				infownd.scroll_up();
-				infownd.redraw();
+				instwnd.scroll_up();
+				instwnd.redraw();
 				break;
 			case 81:	// [Page Down] - scroll down file info box
-				infownd.scroll_down();
-				infownd.redraw();
+				instwnd.scroll_down();
+				instwnd.redraw();
 				break;
 			}
 		else		// handle all normal keys
@@ -332,19 +375,23 @@ int main(int argc, char *argv[])
 					errwnd.redraw();
 					break;
 				} else {
-					char titletxt[80],*title = new char [p->gettitle().length()+1];
-					playing = true;
+					unsigned int	i;
+
 					titlebar.clear();
-					strcpy(title,p->gettitle());
-					sprintf(titletxt,"Title  : %s",title);
-					titlebar.puts(titletxt);
+					titlebar.outtext("File Type: "); titlebar.puts(p->gettype());
+					titlebar.outtext("Title    : "); titlebar.puts(p->gettitle());
+					titlebar.outtext("Author   : "); titlebar.puts(p->getauthor());
 					titlebar.redraw();
-					delete [] title;
+					refresh_songdesc(infownd);
+					instwnd.clear();
+					for(i=0;i<p->getinstruments();i++)
+						instwnd.puts(p->getinstrument(i));
+					instwnd.redraw();
+					playing = true;
 				}
-				// fall through...
-			case 'I':	// refresh song info
-				infownd.setcaption("Song Info");
-				sinfo = true;
+				break;
+			case 'M':	// refresh song info
+				refresh_songdesc(infownd);
 				break;
 			case 'D':	// shell to DOS
 				setvideomode(3);
@@ -353,16 +400,31 @@ int main(int argc, char *argv[])
 				system(getenv("COMSPEC"));
 				clearscreen(backcol);
 				hidecursor();
-				titlebar.redraw();
 				listfiles(filesel);
 				filesel.redraw();
 				break;
-			case 'C':
+			case 'C':	// switch color scheme
 				curdir = getcwd(NULL,0);
 				chdir(prgdir);
 				select_colors();
 				chdir(curdir);
 				free(curdir);
+				break;
+			case '+':
+				if(volume) {
+					volume--;
+					opl.setvolume(volume);
+					mastervol.set(63 - volume);
+					mastervol.redraw();
+				}
+				break;
+			case '-':
+				if(volume < 63) {
+					volume++;
+					opl.setvolume(volume);
+					mastervol.set(63 - volume);
+					mastervol.redraw();
+				}
 				break;
 			}
 	} while(inkey != 27);	// [ESC] - Exit to DOS

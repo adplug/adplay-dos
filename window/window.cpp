@@ -13,16 +13,11 @@
 #include "window.h"
 
 CWindow::CWindow(unsigned char nsizex, unsigned char nsizey, unsigned char nx, unsigned char ny)
-	: x(nx), y(ny), sizex(nsizex), sizey(nsizey), visible(true), refreshbb(false), curpos(0)
+	: x(nx), y(ny), visible(true), refreshbb(false), curpos(0), autocolor(true), backbuf(0), colmap(0), wndbuf(0)
 {
-	insizex = nsizex - 2; insizey = nsizey - 2;
-	backbuf = new char [nsizex*nsizey];
-	wndbuf = new char [insizex * insizey];
-	colmap = new unsigned char [insizex * insizey];
-	memset(wndbuf,' ',insizex*insizey);
-	memset(colmap,7,insizex*insizey);
 	strncpy(caption,"Window",MAXCAPTION);
 	memset(color,7,MAXCOLORS);
+	resize(nsizex,nsizey);
 }
 
 CWindow::~CWindow(void)
@@ -32,19 +27,35 @@ CWindow::~CWindow(void)
 	delete [] backbuf;
 }
 
+void CWindow::resize(unsigned char newx, unsigned char newy)
+{
+	insizex = newx - 2; insizey = newy - 2;
+	sizex = newx; sizey = newy;
+	if(backbuf) delete [] backbuf;
+	if(wndbuf) delete [] wndbuf;
+	if(colmap) delete [] colmap;
+	backbuf = new char [newx*newy];
+	wndbuf = new char [insizex*insizey];
+	colmap = new unsigned char [insizex*insizey];
+	memset(wndbuf,' ',insizex*insizey);
+	memset(colmap,color[In],insizex*insizey);
+}
+
 void CWindow::redraw(void)
 {
 	unsigned char i,j,wndx,wndy=0;
 
 	if(visible) {	// draw window contents
 		settextposition(y,x);
-		::setcolor(color[colBorder]);
+		::setcolor(color[Border]);
 		outchar('Ú');
 		for(i=x+1;i<x+((sizex-1)/2-(strlen(caption)/2+2));i++)
 			outchar('Ä');
-		::setcolor(color[colCaption]);
-		::outtext("> "); ::outtext(caption); ::outtext(" <");
-		::setcolor(color[colBorder]);
+		::outtext("> ");
+		::setcolor(color[Caption]);
+		::outtext(caption);
+		::setcolor(color[Border]);
+		::outtext(" <");
 		for(i+=strlen(caption)+4;i<x+sizex-1;i++)
 			outchar('Ä');
 		outchar('¿');
@@ -57,7 +68,7 @@ void CWindow::redraw(void)
 				else {
 					::setcolor(colmap[wndy*insizex+wndx]);
 					outchar(wndbuf[wndy*insizex+wndx]);
-					::setcolor(color[colBorder]);
+					::setcolor(color[Border]);
 					wndx++;
 				}
 			wndy++;
@@ -75,17 +86,26 @@ void CWindow::redraw(void)
 			}
 }
 
+void CWindow::outc(char c)
+{
+	if(curpos >= insizex*insizey)
+		return;
+
+	if(c != '\n') {
+		wndbuf[curpos] = c;
+		if(autocolor)
+			colmap[curpos] = color[In];
+		curpos++;
+	} else
+		setcursor(0,wherey()+1);
+}
+
 void CWindow::outtext(char *str)
 {
 	unsigned int i;
 
 	for(i=0;i<strlen(str) && curpos < insizex*insizey;i++)
-		if(str[i] != '\n') {
-			wndbuf[curpos] = str[i];
-			colmap[curpos] = color[colIn];
-			curpos++;
-		} else
-			setcursor(0,wherey()+1);
+		outc(str[i]);
 }
 
 void CWindow::puts(char *str)
@@ -96,7 +116,7 @@ void CWindow::puts(char *str)
 
 void CWindow::clear()
 {
-	memset(colmap,0x07,insizex*insizey);
+	memset(colmap,In,insizex*insizey);
 	memset(wndbuf,' ',insizex*insizey);
 	setcursor(0,0);
 }
@@ -228,10 +248,10 @@ void CListWnd::redraw()
 		if(useitem[i]) {
 			if(i == selected) {
 				memset(colmap+getcursor(),selcol,insizex);
-				setcolor(colIn,selcol);
+				setcolor(In,selcol);
 			} else {
 				memset(colmap+getcursor(),unselcol,insizex);
-				setcolor(colIn,unselcol);
+				setcolor(In,unselcol);
 			}
 			puts(item[i]);
 		}
@@ -269,10 +289,10 @@ void CListWnd::removeall()
 void CListWnd::setcolor(Color c, unsigned char v)
 {
 	switch(c) {
-	case colSelect:
+	case Select:
 		selcol = v;
 		break;
-	case colUnselect:
+	case Unselect:
 		unselcol = v;
 		break;
 	default:
@@ -284,9 +304,9 @@ void CListWnd::setcolor(Color c, unsigned char v)
 unsigned char CListWnd::getcolor(Color c)
 {
 	switch(c) {
-	case colSelect:
+	case Select:
 		return selcol;
-	case colUnselect:
+	case Unselect:
 		return unselcol;
 	default:
 		return CWindow::getcolor((CWindow::Color)c);

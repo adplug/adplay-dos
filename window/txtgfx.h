@@ -11,6 +11,7 @@ extern "C" {
 
 void clearscreen(unsigned char col);
 void setvideomode(unsigned char mode);
+void load88font(void);
 void showcursor(void);
 void hidecursor(void);
 void setcolor(unsigned char newcol);

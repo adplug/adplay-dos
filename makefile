@@ -19,11 +19,18 @@ ADPLUGPATH	= ..\adplug				# path to adplug sources
 WINDOWPATH	= window				# path to window library sources
 TIMERPATH	= timer				# path to timer library sources
 
-adplay.exe: adplay.cpp makefile
-	$(CPP) $(CPPOP) -i=$(ADPLUGPATH) -i=$(ADPLUGPATH)\players -i=$(WINDOWPATH) -i=$(TIMERPATH) $(DEFINES) adplay.cpp
-	$(CPP) $(CPPOP) $(DEFINES) $(ADPLUGPATH)\realopl.cpp
+analopl.obj: analopl.cpp analopl.h
+	$(CPP) $(CPPOP) -i=$(ADPLUGPATH) $(DEFINES) analopl.cpp
+
+bars.obj: bars.cpp bars.h
+	$(CPP) $(CPPOP) -i=$(ADPLUGPATH) -i=$(WINDOWPATH) $(DEFINES) bars.cpp
+
+adplug.obj: $(ADPLUGPATH)\adplug.cpp $(ADPLUGPATH)\adplug.h
 	$(CPP) $(CPPOP) -i=$(ADPLUGPATH)\players $(DEFINES) $(ADPLUGPATH)\adplug.cpp
-      $(LINK) F adplay,$(WINDOWPATH)\window,$(WINDOWPATH)\txtgfx,realopl,adplug LIB $(TIMERPATH)\timer,players SYS $(SYSTEM) $(LINKOP)
+
+adplay.exe: adplay.cpp makefile adplug.obj analopl.obj bars.obj
+	$(CPP) $(CPPOP) -i=$(ADPLUGPATH) -i=$(ADPLUGPATH)\players -i=$(WINDOWPATH) -i=$(TIMERPATH) $(DEFINES) adplay.cpp
+      $(LINK) F adplay,$(WINDOWPATH)\window,$(WINDOWPATH)\txtgfx,analopl,bars,adplug LIB $(TIMERPATH)\timer,players SYS $(SYSTEM) $(LINKOP)
 
 players.lib: .autodepend
 	$(CPP) $(CPPOP) $(DEFINES) $(ADPLUGPATH)\players\protrack.cpp

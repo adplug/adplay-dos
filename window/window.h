@@ -2,10 +2,13 @@
  * window.h - Basic Textmode Windows, by Simon Peter (dn.tlp@gmx.net)
  */
 
+#ifndef H_WINDOW_DEFINED
+#define H_WINDOW_DEFINED
+
 #include <string.h>
 
 #define SCREEN_MAXX	80
-#define SCREEN_MAXY	25
+#define SCREEN_MAXY	50
 
 #define MAXCAPTION	30
 #define MAXSTRING		1024
@@ -32,8 +35,7 @@ public:
 
 	void setxy(unsigned char newx, unsigned char newy)	// sets new on-screen x/y position
 	{ x = newx; y = newy; };
-	void resize(unsigned char newx, unsigned char newy)	// resizes the window
-	{ sizex = newx; sizey = newy; };
+	void resize(unsigned char newx, unsigned char newy);	// resizes the window
 	void centerx()							// centers the window x-wise on screen
 	{ x = (unsigned char)((SCREEN_MAXX - sizex) / 2); };
 	void centery()							// centers the window y-wise on screen
@@ -41,7 +43,7 @@ public:
 	void center()							// centers the window on screen
 	{ centerx(); centery(); };
 
-	enum Color {colBorder, colIn, colCaption};
+	enum Color {Border, In, Caption};
 
 	void setcolor(Color c, unsigned char v)			// sets window color
 	{ color[c] = v; };
@@ -58,6 +60,7 @@ public:
 protected:
 	void puts(char *str);						// like puts(), but in the window
 	void outtext(char *str);					// outputs text, but does no linefeed
+	void outc(char c);						// outputs the char c
 
 	void setcursor(unsigned int newx, unsigned int newy)	// set window-cursor to new position
 	{ curpos = newy*insizex+newx; };
@@ -73,6 +76,7 @@ protected:
 	char *wndbuf;							// inner-window text buffer
 	unsigned char *colmap;						// inner-window color map
 	unsigned char insizex,insizey;				// inner-window sizes
+	bool autocolor;							// automatically colorize output flag
 
 private:
 	// flags
@@ -139,7 +143,7 @@ public:
 	void scroll_up()
 	{ if(start) start--; };
 
-	enum Color {colBorder, colIn, colCaption, colSelect, colUnselect};
+	enum Color {Border, In, Caption, Select, Unselect};
 
 	void setcolor(Color c, unsigned char v);			// sets window color
 	unsigned char getcolor(Color c);				// returns window color
@@ -153,3 +157,5 @@ private:
 	unsigned int selected,start,numitems;
 	unsigned char selcol,unselcol;
 };
+
+#endif

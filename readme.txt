@@ -19,17 +19,27 @@ achieve the best possible replay quality. Below is a list of all currently
 supported file formats along with information about possible replay issues.
 
 - A2M: AdLib Tracker 2 by subz3ro
-  - Unimplemented: Lock instrument volume (FF1, FF2) & Lock volume peak
-    (FF3, FF4) commands
+  - Unimplemented commands (version 1-4): FF1 - FF9, FAx - FEx
+  - Unimplemented commands (version 5-8): Gxy, Hxy, Kxy - &xy
+  - In version 5-8 files, instrument panning & the flags byte is ignored
+  - Only SixPack or uncompressed files are supported
 - AMD: AMUSIC Adlib Tracker by Elyssis
+- CMF: Creative Music File Format by Creative Technology
+  - Unimplemented: AdLib rhythm mode
 - D00: EdLib by Vibrants
   - Bugs: Hard restart SR sometimes sound wrong
 - HSC: HSC Adlib Composer by Hannes Seifert, HSC-Tracker by Electronic Rats
 - HSP: HSC Packed by Number Six / Aegis Corp.
 - IMF: Apogee IMF File Format
+- KSM: Ken Silverman's Music Format
+- LAA: LucasArts AdLib Audio File Format by LucasArts
+  - Bugs: Some volumes are a bit off
+- MID: MIDI Audio File Format
 - MTK: MPU-401 Trakker by SuBZeR0
 - S3M: Screamtracker 3 by Future Crew
   - Bugs: Extra Fine Slides (EEx, FEx) & Fine Vibrato (Uxy) are inaccurate
+- SCI: Sierra's AdLib Audio File Format
+  - Bugs: Some instruments are messed up
 - SNG: SNGPlay by BUGSY of OBSESSION
 - RAD: Reality ADlib Tracker by Reality
 - RAW: RdosPlay RAW file format by RDOS
@@ -72,16 +82,15 @@ while within a Windows 95 DOS Box.
 
 Legal:
 ------
-AdPlay may not be sold, or sold as part of a commercial package without the
-express written permission of the author - Simon Peter (dn.tlp@gmx.net). This
-includes shareware. However, you may copy this program freely as long as no
-fee is charged and no modifications are made to the program itself or this
-readme file. For distribution on mass storage media, such as CD-ROM's, please
-contact me first.
+AdPlay is released under the terms and conditions of the LGPL. A recent copy
+of the LGPL can be found at http://www.gnu.org/copyleft/lesser.html.
 
 Release History:
 ----------------
-- v1.0 (2001-05-04)
-  - Using PMODE/W stub now
+- v1.0 (2001-06-01)
+  - AdPlay is open-source now!
+  - Using PMODE/W stub
+  - Brought up-to-date with AdPlug 0.10, except U6M player
+  - New timer routine
 - v1.0 BETA (2001-02-17)
   - First beta release.
