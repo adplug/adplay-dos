@@ -4,4 +4,4 @@ AdPlay/DOS To Do List:
 - Update Makefile to let source dist include timer and window subdirs. [dynamite]
 - Colorize file selector.
 - Add ARJ and RAR archive reading support.
-- Write more build documentation. [dynamite]
+- Write more on-line help (f.e. linked AdPlug library version). [dynamite]

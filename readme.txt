@@ -3,7 +3,7 @@
                €    ‹€ €€    €€ €€       €€      €    ‹€    ‹€
                €     € €€‹‹‹‹‹ﬂ €€       €€‹‹‹‹‹ €     €    €€
 
-AdPlay/DOS 1.3, (c) 2001, 2002 Simon Peter <dn.tlp@gmx.net>
+AdPlay/DOS 1.3, (c) 2000 - 2002 Simon Peter <dn.tlp@gmx.net>
 Website: http://adplug.sourceforge.net
 
 Description:
