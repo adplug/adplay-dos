@@ -85,7 +85,8 @@ freely, subject to the following restrictions:
 
 Release History:
 ----------------
-- 1.3 (2002-09-27)
+- 1.3 (2002-11-14)
+  - Linked with AdPlug 1.3
   - Colorized & sorted file selector
   - Enhanced on-line help
   - Lots of navigational changes (more MS Windows like)
