@@ -26,8 +26,6 @@
 
 #include <stdio.h>
 
-#define MAXINIITEM      256      // max. length of an item in the INI-File
-
 class CfgParse
 {
 public:
@@ -75,13 +73,12 @@ public:
         bool readbool();                // read a bool ("yes"/"true"=true)
 
 private:
+        Error		err;
+        FILE		*f;
+        char		**varlist;
+        unsigned int	items,linenum;
+        char		*var, *val,*cursection, *cursubsection;
+
         bool parse_line();
         bool empty(const char *str);
-
-        Error err;
-        FILE *f;
-        char **varlist;
-        unsigned int items,linenum;
-        char var[MAXINIITEM],val[MAXINIITEM],cursection[MAXINIITEM],
-                cursubsection[MAXINIITEM];
 };

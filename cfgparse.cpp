@@ -56,7 +56,8 @@ static void dbg_printf(char *fmt, ...) { }
 #include "cfgparse.h"
 
 CfgParse::CfgParse(const char *cfgfile)
-        : varlist(0), err(None), linenum(0)
+        : varlist(0), err(None), linenum(0), var(0), val(0), cursection(0),
+	  cursubsection(0)
 {
 #ifdef DEBUG
         f_log = fopen(DEBUG_FILE,"at");
@@ -80,6 +81,11 @@ CfgParse::~CfgParse()
 	}
 
         fclose(f);
+
+	if(var) free(var);
+	if(val) free(val);
+	if(cursection) free(cursection);
+	if(cursubsection) free(cursubsection);
 
 #ifdef DEBUG
         dbg_printf("~CfgParse: destroyed!\n\n");
@@ -106,16 +112,17 @@ bool CfgParse::section(const char *name)
 
 bool CfgParse::subsection(const char *name, const char *nsec)
 {
-        char tmpsection[MAXINIITEM];
+        char *tmpsection;
 
         dbg_printf("subsection(%s, %s) {\n", name, nsec);
 
         // Rewind current section first
         if(!nsec)
-                strcpy(tmpsection,cursection);
+		tmpsection = strdup(cursection);
         else
-                strcpy(tmpsection,nsec);
+		tmpsection = strdup(nsec);
         section(tmpsection);
+	free(tmpsection);
 
         do {
                 do {
@@ -233,7 +240,7 @@ bool CfgParse::empty(const char *str)
 bool CfgParse::parse_line()
 // Parse the next valid config file line and assign variables
 {
-        char		*iniline, *dummy;
+        char		*iniline, *dummy, *buf1, *buf2;
 	unsigned int	linesize = INILINECHUNK, i;
 
         err = None;
@@ -265,30 +272,39 @@ bool CfgParse::parse_line()
         }
 
         // parse line
+	buf1 = (char *)malloc(linesize);
         dbg_printf("(%d) ",linenum);
-        if(sscanf(iniline,"[%s]",cursection)) {
-                dummy = strrchr(cursection,']'); *dummy = '\0';
+        if(sscanf(iniline,"[%s]", buf1)) {
+                dummy = strrchr(buf1,']'); *dummy = '\0';
+		cursection = (char *)realloc(cursection, strlen(buf1) + 1);
+		strcpy(cursection, buf1);
                 dbg_printf("[%s] (Error::NextSection)\n",cursection);
                 err = NextSection;
-		free(iniline);
+		free(iniline); free(buf1);
                 return true;
         }
-        if(sscanf(iniline,"(%s)",cursubsection)) {
-                dummy = strrchr(cursubsection,')'); *dummy = '\0';
+        if(sscanf(iniline,"(%s)", buf1)) {
+                dummy = strrchr(buf1,')'); *dummy = '\0';
+		cursubsection = (char *)realloc(cursubsection, strlen(buf1) + 1);
+		strcpy(cursubsection, buf1);
                 dbg_printf("(%s) (Error::NextSubsection)\n",cursubsection);
                 err = NextSubsection;
-		free(iniline);
+		free(iniline); free(buf1);
                 return true;
         }
-        if(sscanf(iniline,"%s = %s",var,val)) {
+	buf2 = (char *)malloc(linesize);
+        if(sscanf(iniline,"%s = %s", buf1, buf2)) {
+		var = (char *)realloc(var, strlen(buf1) + 1);
+		val = (char *)realloc(val, strlen(buf2) + 1);
+		strcpy(var, buf1); strcpy(val, buf2);
                 dbg_printf("<%s> = <%s>\n",var,val);
-		free(iniline);
+		free(iniline); free(buf1); free(buf2);
                 return true;
         }
 
         dbg_printf("Junk detected! (Error::Invalid)\n");
         err = Invalid;
-	free(iniline);
+	free(iniline); free(buf1); free(buf2);
         return false;
 }
 

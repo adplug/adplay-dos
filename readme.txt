@@ -3,7 +3,7 @@
                €    ‹€ €€    €€ €€       €€      €    ‹€    ‹€
                €     € €€‹‹‹‹‹ﬂ €€       €€‹‹‹‹‹ €     €    €€
 
-AdPlay/DOS 1.4, Copyright (c) 2000 - 2003 Simon Peter <dn.tlp@gmx.net>
+AdPlay/DOS 1.5, Copyright (c) 2000 - 2003 Simon Peter <dn.tlp@gmx.net>
 Website: http://adplug.sourceforge.net
 
 Description:
@@ -141,8 +141,8 @@ freely, subject to the following restrictions:
 
 Release History:
 ----------------
-- 1.5 (2003-03-19)
-  - No changes yet.
+- 1.5 (2003-03-28)
+  - Songs can now be stopped or forcibly rewound when they end.
 
 - 1.4 (2003-03-18)
   - Linked with AdPlug 1.4

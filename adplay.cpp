@@ -54,30 +54,32 @@
         "ColBorder\0ColCaption\0ColIn\0ColSelect\0ColUnselect\0ColBar\0" \
         "ColClip\0HighRes\0Force\0ColFileSel\0ColFileUnsel\0ColDirSel\0" \
         "ColDirUnsel\0ColDriveSel\0ColDriveUnsel\0Section\0ColFocus\0" \
-	"Database\0ColSupportedSel\0ColSupportedUnsel\0SortBy\0"
+	"Database\0ColSupportedSel\0ColSupportedUnsel\0SortBy\0OnSongEnd\0"
 
 // global variables
-CAdPlugDatabase mydb;			  // Global Database instance
-CAnalopl opl;                             // The only output device
-CPlayer *p=0;                             // Main player (0 = none loaded)
-CWndMan wnds;                             // Window manager
-CTxtWnd titlebar,infownd,songwnd,instwnd; // Windows
-FileWnd filesel;                          // File selector window
-CBarWnd volbars(9,63),mastervol(1,63);    // More windows
-unsigned char backcol=7;                  // Background color
-unsigned int subsong,optind=1;
-bool hivideo=true,oplforce=false;         // Configuration
-volatile float time_ms=0.0f;              // Current playing time in ms
-unsigned long totaltime = 0;              // Total time of current subsong
-const char *optstr = "h?pofcb";           // Commandline options
-char configfile[PATH_MAX];                // Path to configfile
-VideoInfo dosvideo;                       // Stores previous (DOS's) video settings
-int volume=0;                             // Main volume
-float last_ms=0.0f;                       // helper variable for delay_ms()
-volatile bool inpoll = false;             // Flag set if in poll_player()
-volatile bool dopoll = false;             // Flag set if timer processing enabled
-char *tmpfn = 0;                          // Unique, temporary filename
-bool in_help;                             // Flag set when help is displayed
+static CAdPlugDatabase mydb;                     // Global Database instance
+static CAnalopl opl;                             // The only output device
+static CPlayer *p=0;                             // Main player (0 = none loaded)
+static CWndMan wnds;                             // Window manager
+static CTxtWnd titlebar,infownd,songwnd,instwnd; // Windows
+static FileWnd filesel;                          // File selector window
+static CBarWnd volbars(9,63),mastervol(1,63);    // More windows
+static unsigned char backcol=7;                  // Background color
+static unsigned int subsong,optind=1;
+static bool hivideo=true,oplforce=false;         // Configuration
+static volatile float time_ms=0.0f;              // Current playing time in ms
+static unsigned long totaltime = 0;              // Total time of current subsong
+static const char *optstr = "h?pofcb";           // Commandline options
+static char configfile[PATH_MAX];                // Path to configfile
+static VideoInfo dosvideo;                       // Stores previous (DOS's) video settings
+static int volume=0;                             // Main volume
+static float last_ms=0.0f;                       // helper variable for delay_ms()
+static volatile bool inpoll = false;             // Flag set if in poll_player()
+static volatile bool dopoll = false;             // Flag set if timer processing enabled
+static char *tmpfn = 0;                          // Unique, temporary filename
+static bool in_help;                             // Flag set when help is displayed
+static volatile bool firsttime = true;           // First time playing flag for each song
+static int onsongend = 0;                        // What to do on song end
 
 // Debug precautions
 #ifdef DEBUG
@@ -102,7 +104,7 @@ static void dbg_printf(char *fmt, ...)
 static void dbg_printf(char *fmt, ...) { }
 #endif
 
-void poll_player(void)
+static void poll_player(void)
 /* This is the main replay function and hooked at first into the timer
  * interrupt. It calls the appropriate player code and does some sanity
  * checks before. It provides a pseudo timer environment for the player for
@@ -133,7 +135,7 @@ void poll_player(void)
         } else
                 del = wait;     // last fraction, reset for next one
 
-        p->update();    // call player
+        firsttime = p->update();    // call player
 
         if(oldfreq != p->getrefresh()) {        // new timer rate requested?
 		oldfreq = p->getrefresh();
@@ -144,7 +146,7 @@ void poll_player(void)
         inpoll = false;         // ...and out again!
 }
 
-void setadplugvideo()
+static void setadplugvideo()
 /* Setup AdPlay's idea of the video state */
 {
 	setvideomode(3);
@@ -153,7 +155,7 @@ void setadplugvideo()
 	hidecursor();
 }
 
-bool dosshell(char *cmd)
+static bool dosshell(char *cmd)
 /* Runs the given command in a DOS shell. Returns true if succeeded. Saves
  * and restores the state of all required variables during the shell command.
  */
@@ -170,7 +172,7 @@ bool dosshell(char *cmd)
 
 #define MAXINILINE	256
 
-void listcolors(char *fn, CListWnd &cl)
+static void listcolors(char *fn, CListWnd &cl)
 /* Takes a CListWnd and rebuilds it with the color-sections list of
  * the given filename 'fn'.
  */
@@ -196,7 +198,7 @@ void listcolors(char *fn, CListWnd &cl)
 
 #undef MAXINILINE
 
-void display_help(CTxtWnd &w)
+static void display_help(CTxtWnd &w)
 /* Displays AdPlay's main help text into the given CTxtWnd. */
 {
 	w.erase();
@@ -205,8 +207,8 @@ void display_help(CTxtWnd &w)
         in_help = true;
 }
 
-bool read_stdwnd(CfgParse &cp, const char *subsec, const char *section,
-        CWindow &w)
+static bool read_stdwnd(CfgParse &cp, const char *subsec, const char *section,
+  			CWindow &w)
 /* Sets the configured positions for a given window. Returns true if
  * succeeded, false otherwise.
  */
@@ -224,7 +226,7 @@ bool read_stdwnd(CfgParse &cp, const char *subsec, const char *section,
         if(cp.geterror() == CfgParse::Invalid) return false; else return true;
 }
 
-bool loadconfig(const char *fn, const char *section)
+static bool loadconfig(const char *fn, const char *section)
 /* Loads and sets only the general configuration out of the file, named by
  * 'fn', using the section 'section' therein. Returns true, if succeeded.
  */
@@ -250,13 +252,19 @@ bool loadconfig(const char *fn, const char *section)
 				filesel.sortby = FileWnd::SortByName;
 			else if(!stricmp(cp.readstr(), "extension"))
 				filesel.sortby = FileWnd::SortByExtension;
+			break;
+		case 27:
+			if(!stricmp(cp.readstr(), "nothing")) onsongend = 0;
+			else if(!stricmp(cp.readstr(), "rewind")) onsongend = 1;
+			else if(!stricmp(cp.readstr(), "stop")) onsongend = 2;
+			break;
 		}
         } while(!cp.geterror());
 
         if(cp.geterror() == CfgParse::Invalid) return false; else return true;
 }
 
-bool loadcolors(const char *fn, const char *section)
+static bool loadcolors(const char *fn, const char *section)
 /* Loads and sets only the color-definition out of the file, named by 'fn',
  * using the section 'section' therein. Returns true, if succeeded.
  */
@@ -318,7 +326,7 @@ bool loadcolors(const char *fn, const char *section)
         if(cp.geterror() == CfgParse::Invalid) return false; else return true;
 }
 
-void select_colors()
+static void select_colors()
 /* Displays the "Change Screen Layout" window and lets the user select
  * a new layout and sets this layout afterwards.
  */
@@ -376,7 +384,7 @@ void select_colors()
 	} while(inkey != 27 && inkey != 13);	// [ESC] - Exit menu
 }
 
-void refresh_songinfo(CTxtWnd &w)
+static void refresh_songinfo(CTxtWnd &w)
 /* Refreshes the "Song Info" window with data from the loaded player. */
 {
         char tmpstr[80];
@@ -395,7 +403,7 @@ void refresh_songinfo(CTxtWnd &w)
 	w.update();
 }
 
-void refresh_songdesc(CTxtWnd &w)
+static void refresh_songdesc(CTxtWnd &w)
 /* Refreshes the "Song Message" window with data from the loaded player. */
 {
 	w.erase();
@@ -405,7 +413,7 @@ void refresh_songdesc(CTxtWnd &w)
         in_help = false;
 }
 
-void refresh_volbars(CBarWnd &w, CAnalopl &opl)
+static void refresh_volbars(CBarWnd &w, CAnalopl &opl)
 /* Refreshes the "Volume Bars" window, using the analyzing hardware OPL
  * output driver.
  */
@@ -422,7 +430,7 @@ void refresh_volbars(CBarWnd &w, CAnalopl &opl)
 	w.update();
 }
 
-unsigned int getopt(int n, char **s)
+static unsigned int getopt(int n, char **s)
 /* Returns an index into the optstr, on which option has been set on the
  * commandline 's' (argv), with 'n' maximum options (argc).
  */
@@ -440,7 +448,7 @@ unsigned int getopt(int n, char **s)
 	return (i+1);
 }
 
-void fast_forward(const unsigned int ms)
+static void fast_forward(const unsigned int ms)
 /* Fast forward the specified amount of milliseconds */
 {
         float ff;
@@ -456,7 +464,7 @@ void fast_forward(const unsigned int ms)
         opl.setquiet(false);
 }
 
-char *extract(char *newfn, archive *a, char *oldfn)
+static char *extract(char *newfn, archive *a, char *oldfn)
 /* Extract file 'oldfn' from archive 'a'. The filename of the extracted file
  * is stored in 'newfn'. 0 is returned if an error occured.
  */
@@ -495,7 +503,7 @@ char *extract(char *newfn, archive *a, char *oldfn)
 	return newfn;
 }
 
-void reset_windows()
+static void reset_windows()
 /* Resets all windows to the initial state at startup. */
 {
         unsigned int i;
@@ -509,17 +517,18 @@ void reset_windows()
         songwnd.erase(); if(!in_help) infownd.erase(); wnds.update();
 }
 
-void stop()
+static void stop()
 /* Stops currently playing tune. Does nothing, if not playing. */
 {
         if(!p) return;
         dbg_printf("stop(): A player is running. Stopping it.\n");
-        while(inpoll) ;         // Wait for timer routine
+        dopoll = false; while(inpoll) ;         // Wait for timer routine
         delete p; p = 0;
         opl.init();
+	dopoll = true;
 }
 
-void play(char *fn)
+static void play(char *fn)
 /* Start playback with file 'fn' */
 {
         dbg_printf("*** play(\"%s\") ***\n",fn);
@@ -572,7 +581,7 @@ void play(char *fn)
         dbg_printf("--- play() ---\n");
 }
 
-void adjust_volume(int amount)
+static void adjust_volume(int amount)
 /* Adjust the main volume by 'amount' units (bounds checking) */
 {
         int newvol = (volume + amount);
@@ -585,7 +594,7 @@ void adjust_volume(int amount)
         }
 }
 
-void activate()
+static void activate()
 /* This function knows what to do, when a file inside the file manager is
  * selected by the user.
  */
@@ -625,7 +634,7 @@ void activate()
         }
 }
 
-void idle_ms(unsigned int ms)
+static void idle_ms(unsigned int ms)
 /* Delays (idles) for an amount of 'ms' milliseconds.
  * Use this function instead of the C library's delay() function!
  */
@@ -634,7 +643,7 @@ void idle_ms(unsigned int ms)
         last_ms = time_ms;
 }
 
-void window_cycle(bool backward = false)
+static void window_cycle(bool backward = false)
 {
         CWindow *focus = CWindow::getfocus();
 
@@ -655,7 +664,7 @@ int main(int argc, char *argv[])
 {
         char            inkey=0, *prgdir, *curdir, *program_name;
         bool            ext, validcfg, quit = false, bkgply = false;
-	unsigned int	opt;
+	unsigned int	opt, prgdrive;
         CWindow         *focus;
 
 #ifdef DEBUG
@@ -765,7 +774,7 @@ int main(int argc, char *argv[])
 
         // init GUI
         if(tmpfn = _tempnam(getenv("TEMP"),"_AP")) mkdir(tmpfn);
-        prgdir = getcwd(NULL,0);
+        prgdir = getcwd(NULL, 0); _dos_getdrive(&prgdrive);
         setadplugvideo();
 	tmInit(poll_player,0xffff,DEFSTACK);
         songwnd.setcaption("Song Info"); volbars.setcaption("VBars");
@@ -780,6 +789,21 @@ int main(int argc, char *argv[])
                         idle_ms(1000/70);
                         refresh_songinfo(songwnd);
                         refresh_volbars(volbars,opl);
+
+			if(onsongend && !firsttime) {	// song ended
+				switch(onsongend) {
+				case 1:	// auto-rewind
+					dopoll = false; while(inpoll) ;	// critical section...
+					p->rewind(subsong);
+		                        last_ms = time_ms = 0.0f;
+					dopoll = true;	// ...End critical section
+					break;
+				case 2:	// stop playback
+					stop();
+					reset_windows();
+					break;
+				}
+			}
 		}
 
                 // Check for keypress and read in, if any
@@ -948,6 +972,7 @@ int main(int argc, char *argv[])
 	tmClose();
         stop();
         setvideoinfo(&dosvideo);
+	_dos_setdrive(prgdrive, NULL);
 	chdir(prgdir);
 	free(prgdir);
         if(tmpfn) { rmdir(tmpfn); free(tmpfn); }
