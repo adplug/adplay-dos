@@ -31,7 +31,7 @@
 	#define OUTP	outp
 #endif
 
-#define SHORTDELAY		8					// short delay in microseconds after OPL hardware output
+#define SHORTDELAY		6					// short delay in microseconds after OPL hardware output
 #define LONGDELAY		35					// long delay in microseconds after OPL hardware output
 
 // the 9 operators as expected by the OPL2
