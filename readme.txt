@@ -13,6 +13,65 @@ textmode interface, it provides a convenient playback experience. AdPlay
 requires an installed OPL2 audio board for song replay. No emulated playback
 is supported.
 
+Supported formats:
+------------------
+AdPlug implements unique file replayers for each supported format in order to
+achieve the best possible replay quality. Below is a list of all currently
+supported file formats along with information about possible replay issues.
+Players marked as "preliminary" aren't considered final by the author(s) and
+may contain many replay issues, but are included for testing purposes anyway.
+
+- A2M: AdLib Tracker 2 by subz3ro
+  - Unimplemented commands (version 1-4): FF1 - FF9, FAx - FEx
+  - Unimplemented commands (version 5-8): Gxy, Hxy, Kxy - &xy
+  - In version 5-8 files, instrument panning & the flags byte is ignored
+  - Only SixPack compressed and uncompressed files are supported
+  - All OPL3 functionality is absent (not possible with AdLib)
+- AMD: AMUSIC Adlib Tracker by Elyssis
+- BAM: Bob's Adlib Music Format by Bob
+- CFF: BoomTracker 4.0 by CUD
+- CMF: Creative Music File Format by Creative Technology
+  - Unimplemented: AdLib rhythm mode
+- D00: EdLib by Vibrants
+  - Bugs: Hard restart SR sometimes sound wrong
+- DFM: Digital-FM by R.Verhaag
+- DMO: Twin TrackPlayer by TwinTeam
+- DTM: DeFy Adlib Tracker by DeFy
+- HSC: HSC Adlib Composer by Hannes Seifert, HSC-Tracker by Electronic Rats
+- HSP: HSC Packed by Number Six / Aegis Corp.
+- IMF: Apogee IMF File Format by Apogee
+- KSM: Ken Silverman's Adlib Music Format by Ken Silverman
+  - Needs file 'insts.dat' in the same directory as loaded file
+- LAA: LucasArts AdLib Audio File Format by LucasArts
+  - Bugs: Some volumes are a bit off
+- LDS: LOUDNESS Music Format (preliminary)
+  - Bugs: Undocumented format, more to come.
+- M: Ultima 6 Music Format by Origin
+- MAD: Mlat Adlib Tracker
+- MID: MIDI Audio File Format
+- MKJ: MKJamz by M \ K Productions (preliminary)
+  - Bugs: Still many replay flaws
+- MTK: MPU-401 Trakker by SuBZeR0
+- RAD: Reality ADlib Tracker by Reality
+- RAW: RdosPlay RAW file format by RDOS
+  - Unimplemented: OPL3 register writes (not possible with AdLib)
+- ROL: AdLib Visual Composer by AdLib Inc.
+  - Needs file 'standard.bnk' in the same directory as loaded file
+    (be careful under UNIX - it's case sensitive!)
+- S3M: Scream Tracker 3 by Future Crew
+  - Bugs: Extra Fine Slides (EEx, FEx) & Fine Vibrato (Uxy) are inaccurate
+- SA2: Surprise! Adlib Tracker 2 by Surprise! Productions
+- SAT: Surprise! Adlib Tracker by Surprise! Productions
+- SCI: Sierra's AdLib Audio File Format by Sierra On-Line Inc.
+  - Needs file '???patch.003' in the same directory as loaded file, where
+    '???' are the first 3 characters of the loaded file
+  - Bugs: Some instruments are messed up
+- SNG: SNGPlay by BUGSY of OBSESSION
+- SNG: Faust Music Creator by FAUST
+- SNG: Adlib Tracker 1.0 by TJ
+- XAD: eXotic ADlib Format by Riven the Mage
+- XMS: XMS-Tracker by MaDoKaN/E.S.G
+
 Usage:
 ------
 AdPlay is normally started without any commandline parameters, bringing it
@@ -49,9 +108,6 @@ Known Problems:
 ---------------
 Returning from a DOS shell in a Windows 95 DOS Box will destroy the sound.
 
-Shelling to DOS while playing back with high timer rates can crash the
-player while within real DOS.
-
 Credits:
 --------
 AdPlay/DOS is completely programmed by Simon Peter. It depends on the AdPlug
@@ -85,8 +141,8 @@ freely, subject to the following restrictions:
 
 Release History:
 ----------------
-- 1.3 (2002-11-14)
-  - Linked with AdPlug 1.3
+- 1.3 (2002-11-21)
+  - Linked with AdPlug 1.3 + patches
   - Colorized & sorted file selector
   - Enhanced on-line help
   - Lots of navigational changes (more MS Windows like)
