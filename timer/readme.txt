@@ -14,3 +14,6 @@ runs flawlessly in a Win95 DOS Box.
 
 	I ripped the necessary code out of the OpenCP 2.6.0
 source distribution and made a nice lil' lib for easy usage.
+
+	OpenCP, and thus this timer lib, is distributed under
+the terms and conditions of the GPL.
