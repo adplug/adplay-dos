@@ -57,9 +57,21 @@ selector within a graphical user interface. Select files using the Up/Down
 cursor keys and press enter to start playback. F1 will bring up a help
 window, explaining all other available key functions.
 
-You can also invoke AdPlay by giving it a file to play as commandline
-parameter, which will put AdPlay into background play mode, meaning it
-will immediately return to DOS, playing the file in the background.
+You can also invoke AdPlay in the so called batch mode, which will turn it
+into a console background playback utility. Use the '-b <file>' commandline
+parameter to start AdPlay in this way, replacing <file> with the desired
+file to be played back.
+
+Other interesting parameters are the '-f' and '-c' options, which will load
+another configuration file and/or section. You can stack up as many of
+these parameters, as you like. For example, use '-c LowRes -c Monochrome'
+to turn the interface to low resolution mode, in monochrome. With any new
+configuration file loaded, the 'default' section will always be processed
+first.
+
+To get a list with short descriptions of all available commandline
+parameters in AdPlay, use the '-?' or '-h' commandline options. All options
+can be set with '-' or '/' respectively.
 
 Configuration:
 --------------
@@ -80,10 +92,10 @@ of the LGPL can be found at http://www.gnu.org/copyleft/lesser.html.
 
 Release History:
 ----------------
-- v1.0 (2001-06-10)
+- v1.0 (2001-06-30)
   - AdPlay is open-source now!
   - Using PMODE/W stub
-  - Brought up-to-date with AdPlug 0.10, except U6M player
+  - Linked with AdPlug 1.0 core release, excluding U6M player
   - New timer routine
   - New, customizable screen layout
 - v1.0 BETA (2001-02-17)
