@@ -1,5 +1,7 @@
 AdPlay/DOS To Do List:
 ----------------------
-- Fix memory leak, when loading many tunes in sequence.
-- Update Makefile to let source dist include timer and window subdirs
-- Colorize file selector
+- Fix memory leak when loading many tunes in sequence.
+- Update Makefile to let source dist include timer and window subdirs. [dynamite]
+- Colorize file selector.
+- Add ARJ and RAR archive reading support.
+- Write more build documentation. [dynamite]

@@ -20,6 +20,15 @@ The AdPlug library can be fetched from http://adplug.sourceforge.net. The
 other two libraries are included with the AdPlay/DOS distribution. They can
 be found in the 'timer' and 'window' subdirectories, respectively.
 
+AdPlay/DOS is configured to build with the PMODE/W DOS extender by default.
+So, when using the standard install, you need PMODE/W v1.33, additionally. It
+can be fetched freely from various sources on the Internet. I got my version
+from http://www.programmersheaven.com.
+
+PMODE/W isn't open source software, however. If you prefer another DOS
+extender over PMODE/W, just specify the system definition of your extender
+on the SYSTEM variable in your CONFIG.MIF file.
+
 Build Instructions
 ------------------
 Please read the file INSTALL.TXT for further build instructions.
