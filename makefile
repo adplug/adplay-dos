@@ -15,7 +15,7 @@ LINKOP	= OP ST=32k					# linker options
 DEFINES	= -dstd= -dstring=String -dADPLAY	# trick to convert std::string to WATCOM's String() class
 SYSTEM	= pmodew					# target system
 
-ADPLUGPATH	= ..\adplug-1.0			# path to adplug sources
+ADPLUGPATH	= ..\adplug				# path to adplug sources
 WINDOWPATH	= window				# path to window library sources
 TIMERPATH	= timer				# path to timer library sources
 
@@ -50,8 +50,8 @@ players.lib: .autodepend
 	$(CPP) $(CPPOP) $(DEFINES) $(ADPLUGPATH)\players\s3m.cpp
 	$(CPP) $(CPPOP) $(DEFINES) $(ADPLUGPATH)\players\sa2.cpp
 	$(CPP) $(CPPOP) $(DEFINES) $(ADPLUGPATH)\players\sng.cpp
-#	$(CPP) $(CPPOP) $(DEFINES) $(ADPLUGPATH)\players\mkj.cpp
-	$(LIB) -n -b players.lib +protrack +a2m +amd +d00 +hsc +hsp +imf +mtk +rad +raw +s3m +sa2 +mid +sng +ksm #+mkj
+	$(CPP) $(CPPOP) $(DEFINES) $(ADPLUGPATH)\players\mkj.cpp
+	$(LIB) -n -b players.lib +protrack +a2m +amd +d00 +hsc +hsp +imf +mtk +rad +raw +s3m +sa2 +mid +sng +ksm +mkj
 
 clean: .symbolic
 	del *.obj
