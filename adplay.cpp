@@ -12,18 +12,18 @@
 #include <malloc.h>
 #include <direct.h>
 #include <env.h>
-#include <adplug.h>
-#include <analopl.h>
+#include <adplug\adplug.h>
+#include <adplug\analopl.h>
+#include <timer\timer.h>
+#include <window\txtgfx.h>
+#include <window\window.h>
+#include <window\wndman.h>
 
-#include "timer\timer.h"
-#include "window\txtgfx.h"
-#include "window\window.h"
-#include "window\wndman.h"
 #include "cfgparse.h"
 #include "arcfile.h"
 
 // global defines
-#define ADPLAYVERS	"AdPlay v1.1"	// AdPlay version string
+#define ADPLAYVERS	"AdPlay 1.2"	// AdPlay version string
 #define DEFSTACK		(32*1024)		// default stack size for timer-replay in k's
 #define CONFIGFILE	"adplay.ini"	// filename of default configuration file
 #define DEFCONFIG		"default"		// name of default configuration section
@@ -426,7 +426,7 @@ int main(int argc, char *argv[])
 	unsigned int	opt;
 	zipfile		archive;
 
-	cout << ADPLAYVERS << ", (c) 2000 - 2001 Simon Peter <dn.tlp@gmx.net>" << endl << endl;
+	cout << ADPLAYVERS << ", (c) 2000 - 2002 Simon Peter <dn.tlp@gmx.net>" << endl << endl;
 
 	if(!strcmp(getenv("ADPLAY"),"S")) {
 		cout << "AdPlay already running!" << endl;
@@ -504,8 +504,9 @@ int main(int argc, char *argv[])
 	hidecursor();
 	clearscreen(backcol);
 	tmInit(poll_player,0xffff,DEFSTACK);
-	titlebar.puts(ADPLAYVERS ", (c) 2000 - 2001 Simon Peter <dn.tlp@gmx.net>");
+	titlebar.puts(ADPLAYVERS ", (c) 2000 - 2002 Simon Peter <dn.tlp@gmx.net>");
 	titlebar.puts("This is free software under the terms and conditions of the Nullsoft license.");
+	titlebar.puts("Refer to the file README.TXT for more information.");
 	songwnd.setcaption("Song Info"); instwnd.setcaption("No Instruments"); volbars.setcaption("VBars");
 	titlebar.setcaption(ADPLAYVERS); filesel.setcaption("Directory"); mastervol.setcaption("Vol");
 	listfiles(filesel);

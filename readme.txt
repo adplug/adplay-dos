@@ -3,7 +3,7 @@
                €    ‹€ €€    €€ €€       €€      €    ‹€    ‹€
                €     € €€‹‹‹‹‹ﬂ €€       €€‹‹‹‹‹ €     €    €€
 
-AdPlay/DOS v1.1, (c) 2001 Simon Peter <dn.tlp@gmx.net>, et al.
+AdPlay/DOS 1.2, (c) 2001, 2002 Simon Peter <dn.tlp@gmx.net>
 
 Website: http://adplug.sourceforge.net/dos.shtml
 
@@ -77,6 +77,9 @@ freely, subject to the following restrictions:
 
 Release History:
 ----------------
+- 1.2 (2002-03-30)
+  - Linked with AdPlug 1.2, excluding U6M & ROL players
+  - Disk drive selection support
 - v1.1 (2001-10-25)
   - Linked with AdPlug 1.1
   - .ZIP file reading support
