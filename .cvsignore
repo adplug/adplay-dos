@@ -3,3 +3,4 @@ config.mif
 *.log
 srcdist.lst
 bindist.lst
+make.sh

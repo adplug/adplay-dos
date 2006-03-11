@@ -1,0 +1,12 @@
+Build notes
+-----------
+- DJGPP is the only supported GCC architecture right now.
+
+- Please use Makefile.gcc.
+
+- There are four Makefile targets:
+  - The default target builds the library
+  - 'clean' cleans the source tree of all built files
+  - 'dist' makes a distribution archive
+  - 'install' installs the library into the hierarchy under $(prefix),
+    which is defined in the Makefile

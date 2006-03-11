@@ -1,6 +1,6 @@
 /*
  * filewnd.h - Small File Manager for DOS w/ archive support
- * Copyright (c) 2002, 2003 Simon Peter <dn.tlp@gmx.net>
+ * Copyright (c) 2002, 2003, 2006 Simon Peter <dn.tlp@gmx.net>
  *
  * This software is provided 'as-is', without any express or implied
  * warranty.  In no event will the authors be held liable for any damages
@@ -76,4 +76,5 @@ private:
         unsigned int drivenum(char *fname);
         void sortinsert(FileItem *newitem);
 	bool supported(const char *filename);
+	bool is_subdir(struct dirent *direntp);
 };

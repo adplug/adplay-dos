@@ -36,16 +36,17 @@ x86		MS-DOS			DJGPP
 
 Building
 --------
-Please read the file INSTALL.TXT for build instructions!
+Please read one of the INSTALL.* files for build instructions! There
+is a file for each supported architecture.
 
 Debug Logging
 -------------
 The library can be compiled to produce some debug logging output. To enable
-this, add the following line to your CONFIG.MIF file:
+this, you have to define the DEBUG preprocessor variable. Please refer
+to the manual of your respective compiler architecture for information
+on how to do this.
 
-CPPFLAGS += -dDEBUG
-
-This will enable debug logging. The output file is specified with the
+The output file for the debug messages is specified with the
 DEBUG_FILE preprocessor define in the 'window.cpp' file.
 
 Legal

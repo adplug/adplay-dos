@@ -1,6 +1,6 @@
 /*
  * cfgparse.cpp - Config file parser
- * Copyright (c) 2001 - 2003 Simon Peter <dn.tlp@gmx.net>
+ * Copyright (c) 2001 - 2003, 2006 Simon Peter <dn.tlp@gmx.net>
  *
  * This software is provided 'as-is', without any express or implied
  * warranty.  In no event will the authors be held liable for any damages
@@ -52,7 +52,7 @@ static void dbg_printf(char *fmt, ...) { }
 #include "cfgparse.h"
 
 CfgParse::CfgParse(const char *cfgfile)
-        : varlist(0), err(None), linenum(0), var(0), val(0), cursection(0),
+        : err(None), varlist(0), linenum(0), var(0), val(0), cursection(0),
 	  cursubsection(0)
 {
 #ifdef DEBUG

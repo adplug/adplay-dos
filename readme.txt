@@ -3,7 +3,7 @@
                €    ‹€ €€    €€ €€       €€      €    ‹€    ‹€
                €     € €€‹‹‹‹‹ﬂ €€       €€‹‹‹‹‹ €     €    €€
 
-AdPlay/DOS 1.5, Copyright (c) 2000 - 2004 Simon Peter <dn.tlp@gmx.net>
+AdPlay/DOS 1.6, Copyright (c) 2000 - 2006 Simon Peter <dn.tlp@gmx.net>
 Website: http://adplug.sourceforge.net
 
 Description:
@@ -148,6 +148,11 @@ freely, subject to the following restrictions:
 
 Release History:
 ----------------
+- 1.6 (2006-02-22)
+  - Support for the DJGPP compiler.
+  - Binary version compiled with DJGPP.
+  - Updated to be fully compatible with the ISO standard C++ library.
+
 - 1.5 (2004-09-30)
   - Songs can now be stopped or forcibly rewound when they end.
   - Added the '-q' option for batch mode playback.

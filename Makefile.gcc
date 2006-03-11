@@ -1,0 +1,39 @@
+INSTALL = install
+
+CPPFLAGS += -DHAVE_GCC_TIMER_H
+CXXFLAGS += -Wno-deprecated -g
+LDFLAGS += -lstdcxx -lwindow -ladplug -lbinio -lgcctimer
+
+ifeq ($(DEBUG),1)
+	CPPFLAGS += -DDEBUG
+endif
+
+DIST = readme.txt INSTALL.wat Makefile.bt Makefile.wat Makefile.gcc build.txt \
+	arcfile.h cfgparse.h filewnd.h helptxt.h adplay.cpp arcfile.cpp \
+	cfgparse.cpp filewnd.cpp adplay.ini
+
+VERSION = 1.6
+NAME = adplay-$(VERSION)
+
+prefix = /usr/local
+bindir = $(prefix)/bin
+
+adplay.exe: adplay.o arcfile.o cfgparse.o filewnd.o
+	$(CXX) -o $@ $^ $(LDFLAGS)
+
+adplay.o: adplay.cpp cfgparse.h arcfile.h filewnd.h helptxt.h
+arcfile.o: arcfile.cpp arcfile.h
+cfgparse.o: cfgparse.cpp cfgparse.h
+filewnd.o: filewnd.cpp filewnd.h arcfile.h
+
+clean:
+	rm -f *.o adplay.exe
+
+dist:
+	mkdir $(NAME)
+	cp $(DIST) $(NAME)
+	tar cfj $(NAME).tar.bz2 $(NAME)
+	rm -r $(NAME)
+
+install: adplay.exe
+	$(INSTALL) adplay.exe $(bindir)

@@ -1,6 +1,6 @@
 /*
  * arcfile.cpp - Archive file handling
- * Copyright (c) 2002 Simon Peter <dn.tlp@gmx.net>
+ * Copyright (c) 2002, 2006 Simon Peter <dn.tlp@gmx.net>
  *
  * This software is provided 'as-is', without any express or implied
  * warranty.  In no event will the authors be held liable for any damages
@@ -45,7 +45,7 @@ void ArcFile::set_name(char *fname)
 
 /***** archive *****/
 
-archive::archive(): arcname(0), f(0), files(0)
+archive::archive(): f(0), arcname(0), files(0)
 {
 }
 
@@ -83,7 +83,7 @@ archive *archive::detect(char *filename)
 
 /***** zipfile *****/
 
-static zipfile *zipfile::factory(char *filename)
+zipfile *zipfile::factory(char *filename)
 {
         zipfile *a = new zipfile;
 
