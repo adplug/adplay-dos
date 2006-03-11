@@ -1,6 +1,6 @@
 /*
  * window.cpp - Textmode window library
- * Copyright (c) 2001, 2002 Simon Peter <dn.tlp@gmx.net>
+ * Copyright (c) 2001, 2002, 2006 Simon Peter <dn.tlp@gmx.net>
  *
  * This software is provided 'as-is', without any express or implied
  * warranty.  In no event will the authors be held liable for any damages
@@ -38,13 +38,13 @@
 #define MAXCOLORS       8
 
 // Static variable initialization
-static unsigned char CWindow::color[MAXCOLORS] = {7, 7, 7, 7, 0x70, 7, 4, 4};
-static CWindow *CWindow::focus = 0;
+unsigned char CWindow::color[MAXCOLORS] = {7, 7, 7, 7, 0x70, 7, 4, 4};
+CWindow *CWindow::focus = 0;
 
 /***** CWindow *****/
 
-CWindow::CWindow(): x(DEFWNDPOSX), y(DEFWNDPOSY), curpos(0), autocolor(true),
-        colmap(0), wndbuf(0), caption(0)
+CWindow::CWindow(): wndbuf(0), colmap(0), autocolor(true), x(DEFWNDPOSX),
+		    y(DEFWNDPOSY), curpos(0), caption(0)
 {
         if(!focus) {    // First created window?
                 setfocus();                     // Set focus here!
@@ -89,12 +89,12 @@ void CWindow::setxy(unsigned char newx, unsigned char newy)
 	y = newy;
 }
 
-static void CWindow::setcolor(Color c, unsigned char v)
+void CWindow::setcolor(Color c, unsigned char v)
 {
         color[c] = v;
 }
 
-static unsigned char CWindow::getcolor(Color c)
+unsigned char CWindow::getcolor(Color c)
 {
         return color[c];
 }
@@ -116,7 +116,7 @@ void CWindow::setfocus()
         focus = this;
 }
 
-static CWindow *CWindow::getfocus()
+CWindow *CWindow::getfocus()
 {
         return focus;
 }
@@ -516,7 +516,7 @@ void CBarWnd::set(unsigned int v, unsigned int n)
 
 /***** CErrWnd *****/
 
-static void CErrWnd::message(const char *errtxt, const char *caption)
+void CErrWnd::message(const char *errtxt, const char *caption)
 {
         unsigned int rowln = 0, rows = 0, rwcnt = 0, i;
         CTxtWnd wnd;

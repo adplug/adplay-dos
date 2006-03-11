@@ -1,6 +1,6 @@
 /*
  * window.h - Textmode window library
- * Copyright (c) 2001, 2002 Simon Peter <dn.tlp@gmx.net>
+ * Copyright (c) 2001, 2002, 2006 Simon Peter <dn.tlp@gmx.net>
  *
  * This software is provided 'as-is', without any express or implied
  * warranty.  In no event will the authors be held liable for any damages
@@ -35,7 +35,7 @@ public:
 
         // (De-)Constructors
 	CWindow();
-	~CWindow();
+	virtual ~CWindow();
 
         // Members
         void setcaption(const char *newcap);    // sets new window caption

@@ -1,5 +1,5 @@
 Portable Textmode Window Class Library
-Copyright (c) 2000 - 2002 Simon Peter <dn.tlp@gmx.net>
+Copyright (c) 2000 - 2002, 2006 Simon Peter <dn.tlp@gmx.net>
 Version 1.1
 
 Description
@@ -32,6 +32,7 @@ The following back-ends are provided:
 Architecture    Operating System        Compiler
 ------------    ----------------        --------
 x86             MS-DOS                  Watcom
+x86		MS-DOS			DJGPP
 
 Building
 --------
@@ -68,4 +69,5 @@ freely, subject to the following restrictions:
 History
 -------
 Changes from version 1.0 to version 1.1:
-- None, yet...
+- Added support for the DJGPP compiler.
+- Miscellaneous fixes (mainly cosmetic).

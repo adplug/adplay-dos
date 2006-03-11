@@ -1,5 +1,7 @@
 /*
- * txtgfx.c - Textmode Graphics Library, by Simon Peter (dn.tlp@gmx.net)
+ * txtgfx.c - Textmode Graphics Library, by Simon Peter <dn.tlp@gmx.net>
+ *
+ * Watcom/OpenWatcom backend
  */
 
 #include <i86.h>

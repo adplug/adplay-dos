@@ -82,6 +82,7 @@ void outtext(char *str);
  * str	= string to write to video memory
  */
 
+#ifdef __WATCOMC__
 extern void wait_retrace(void);
 /* wait for vertical retrace */
 #pragma aux wait_retrace = \
@@ -93,6 +94,7 @@ extern void wait_retrace(void);
 	"test al,8" \
 	"jnz yepp" \
 	modify [al dx];
+#endif
 
 VideoInfo *getvideoinfo(VideoInfo *vi);
 void setvideoinfo(VideoInfo *vi);
