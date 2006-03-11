@@ -1,7 +1,9 @@
 INSTALL = install
+STRIP = strip
+ZIP = zip
 
 CPPFLAGS += -DHAVE_GCC_TIMER_H
-CXXFLAGS += -Wno-deprecated -g
+CXXFLAGS += -Wno-deprecated
 LDFLAGS += -lstdcxx -lwindow -ladplug -lbinio -lgcctimer
 
 ifeq ($(DEBUG),1)
@@ -11,6 +13,8 @@ endif
 DIST = readme.txt INSTALL.wat Makefile.bt Makefile.wat Makefile.gcc build.txt \
 	arcfile.h cfgparse.h filewnd.h helptxt.h adplay.cpp arcfile.cpp \
 	cfgparse.cpp filewnd.cpp adplay.ini
+
+BINARYDIST = adplay.exe adplay.ini readme.txt
 
 VERSION = 1.6
 NAME = adplay-$(VERSION)
@@ -34,6 +38,10 @@ dist:
 	cp $(DIST) $(NAME)
 	tar cfj $(NAME).tar.bz2 $(NAME)
 	rm -r $(NAME)
+
+binarydist: adplay.exe
+	$(STRIP) adplay.exe
+	$(ZIP) adplay$(VERSION:.=).zip $(BINARYDIST)
 
 install: adplay.exe
 	$(INSTALL) adplay.exe $(bindir)
