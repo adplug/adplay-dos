@@ -97,7 +97,7 @@
  * right memory manually would be way too tedious.
  */
 #ifdef DJGPP
-int _crt0_startup_flags = _CRT0_FLAG_LOCK_MEMORY;
+int _crt0_startup_flags = _CRT0_FLAG_LOCK_MEMORY | _CRT0_FLAG_NO_LFN;
 #endif
 
 // global variables

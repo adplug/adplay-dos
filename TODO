@@ -1,5 +1,6 @@
 AdPlay/DOS To Do List:
 ----------------------
+- Turn off or repair Win9x long filename support.
 - Add ARJ and RAR archive reading support.
 - Add fancy screensaver feature.
 - Sort the layout selection window.

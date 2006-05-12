@@ -9,6 +9,7 @@ NAME = window-$(VERSION)
 prefix = /usr/local
 includedir = $(prefix)/include/window
 libdir = $(prefix)/lib
+srcdir = .
 
 libwindow.a: txtgfx_d.o window.o wndman.o debug.o
 	$(AR) cru $@ $?
@@ -30,5 +31,5 @@ dist:
 
 install: libwindow.a
 	$(INSTALL) -d $(includedir)
-	$(INSTALL) -m 644 txtgfx.h window.h wndman.h $(includedir)
+	$(INSTALL) -m 644 $(srcdir)/txtgfx.h $(srcdir)/window.h $(srcdir)/wndman.h $(includedir)
 	$(INSTALL) -m 644 libwindow.a $(libdir)

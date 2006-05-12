@@ -10,17 +10,19 @@ ifeq ($(DEBUG),1)
 	CPPFLAGS += -DDEBUG
 endif
 
-DIST = readme.txt INSTALL.wat Makefile.bt Makefile.wat Makefile.gcc build.txt \
+DIST = readme.txt INSTALL.wat Makefile.bt Makefile.wcc Makefile.gcc build.txt \
 	arcfile.h cfgparse.h filewnd.h helptxt.h adplay.cpp arcfile.cpp \
 	cfgparse.cpp filewnd.cpp adplay.ini
 
-BINARYDIST = adplay.exe adplay.ini readme.txt
+BINARYDIST = adplay.exe $(srcdir)/adplay.ini $(srcdir)/readme.txt
 
 VERSION = 1.6
 NAME = adplay-$(VERSION)
+BINARYNAME = adplay$(subst .,,$(VERSION))
 
 prefix = /usr/local
 bindir = $(prefix)/bin
+srcdir = .
 
 adplay.exe: adplay.o arcfile.o cfgparse.o filewnd.o
 	$(CXX) -o $@ $^ $(LDFLAGS)
@@ -35,13 +37,17 @@ clean:
 
 dist:
 	mkdir $(NAME)
-	cp $(DIST) $(NAME)
+	cd $(srcdir); cp $(DIST) $$OLDPWD/$(NAME)
 	tar cfj $(NAME).tar.bz2 $(NAME)
 	rm -r $(NAME)
 
 binarydist: adplay.exe
 	$(STRIP) adplay.exe
-	$(ZIP) adplay$(VERSION:.=).zip $(BINARYDIST)
+	rm -rf $(BINARYNAME).zip $(BINARYNAME)
+	mkdir $(BINARYNAME)
+	cp $(BINARYDIST) $(BINARYNAME)
+	cd $(BINARYNAME) && $(ZIP) ../$(BINARYNAME).zip *
+	rm -rf $(BINARYNAME)
 
 install: adplay.exe
 	$(INSTALL) adplay.exe $(bindir)
