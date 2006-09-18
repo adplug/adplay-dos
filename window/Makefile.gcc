@@ -25,7 +25,7 @@ clean:
 
 dist:
 	mkdir $(NAME)
-	cp $(DIST) $(NAME)
+	cd $(srcdir); cp $(DIST) $$OLDPWD/$(NAME)
 	tar cfj $(NAME).tar.bz2 $(NAME)
 	rm -r $(NAME)
 
