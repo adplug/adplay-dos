@@ -4,7 +4,7 @@
                €     € €€‹‹‹‹‹ﬂ €€       €€‹‹‹‹‹ €     €    €€
 
 AdPlay/DOS 1.6, Copyright (c) 2000 - 2006 Simon Peter <dn.tlp@gmx.net>
-Website: http://adplug.sourceforge.net
+Website: http://adplug.github.io
 
 Description:
 ------------

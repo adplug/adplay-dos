@@ -16,7 +16,7 @@ WATCOM Timer Library >= 1.0, when using Watcom or OpenWatcom
 DJGPP Timer Library >= 1.0, when using DJGPP
 Portable Textmode Window Class Library >= 1.1
 
-All these libraries can be fetched from http://adplug.sourceforge.net/.
+All these libraries can be fetched from http://adplug.github.io/.
 
 On Watcom and OpenWatcom, AdPlay/DOS is configured to build with the
 PMODE/W DOS extender by default. So, when using the standard install,
