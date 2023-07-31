@@ -1,0 +1,9 @@
+*.err
+*.log
+srcdist.lst
+bindist.lst
+make.sh
+window/config.mif
+window/window.lib
+window/*.err
+window/make.sh
