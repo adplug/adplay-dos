@@ -47,25 +47,16 @@
 #	include <crt0.h>
 #endif
 
-#ifdef HAVE_WCC_TIMER_H
-#	include <timer.h>
-#elif defined HAVE_GCC_TIMER_H
+#if defined HAVE_GCC_TIMER_H
 #	include <gcctimer.h>
 #else
 #	error No suitable timer handling library found
 #endif
 
-// Decide which _tempnam to use
-#ifdef __WATCOMC__
-#	define TEMPNAM	_tempnam
-#else
-#	define TEMPNAM	tempnam
-#endif
+#define TEMPNAM	tempnam
 
 // Decide which _splitpath to use
-#ifdef __WATCOMC__
-#	define SPLITPATH	_splitpath
-#elif defined DJGPP
+#ifdef DJGPP
 #	define SPLITPATH	fnsplit
 #else
 #	error No _splitpath equivalent found
@@ -621,7 +612,7 @@ static void play(char *fn)
   // Update instruments window
   instwnd.erase();
   for(i=0;i<p->getinstruments();i++) {
-    sprintf(ins,"%3d³",i+1);
+    sprintf(ins,"%3dï¿½",i+1);
     instwnd.outtext(ins);
     instwnd.puts(p->getinstrument(i).c_str());
   }
