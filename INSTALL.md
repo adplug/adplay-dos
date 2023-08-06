@@ -1,5 +1,4 @@
-Build notes
------------
+# Build notes
 - DJGPP is the only supported GCC architecture.
 
 - Use Makefile to build.
@@ -10,3 +9,8 @@ Build notes
 
 - The 'binarydist' Makefile target will build a binary distribution of
   AdPlay. A ZIP archiving program is needed for this.
+
+# DJGPP cross compilation steps
+Build system used is Ubuntu 22.04, using GCC 12.2.0
+
+See build/Dockerfile
