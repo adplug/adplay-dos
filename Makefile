@@ -4,7 +4,10 @@ ZIP = zip
 
 CPPFLAGS += -DHAVE_GCC_TIMER_H
 CXXFLAGS += -Wno-deprecated
-LDFLAGS += -lstdcxx -lwindow -ladplug -lbinio -lgcctimer
+CPPFLAGS += -I/djgpp/include/libbinio -I/djgpp/include -I/djgpp/include/adplug
+CXXFLAGS += -I/djgpp/include/libbinio -I/djgpp/include -I/djgpp/include/adplug
+LDFLAGS += -lstdc++ -lwindow -ladplug -lbinio -lgcctimer -L/djgpp/lib
+LDFLAGS += -L/djgpp/lib -L/djgpp/lib/gcc/i586-pc-msdosdjgpp/12.2.0
 
 ifeq ($(DEBUG),1)
 	CPPFLAGS += -DDEBUG
@@ -20,7 +23,7 @@ VERSION = 1.6
 NAME = adplay-$(VERSION)
 BINARYNAME = adplay$(subst .,,$(VERSION))
 
-prefix = /usr/local
+prefix = /djgpp
 bindir = $(prefix)/bin
 srcdir = .
 

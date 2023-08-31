@@ -14,3 +14,11 @@
 Build system used is Ubuntu 22.04, using GCC 12.2.0
 
 See build/Dockerfile
+
+Run with:
+```
+sudo docker build ./ -t mydjgpp
+sudo docker run --volume $(pwd):/build/adplay-dos -it mydjgpp
+cd build
+./build.sh
+```
