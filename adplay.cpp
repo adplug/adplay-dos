@@ -92,6 +92,7 @@ int _crt0_startup_flags = _CRT0_FLAG_LOCK_MEMORY | _CRT0_FLAG_NO_LFN;
 #endif
 
 // global variables
+static int PATH_MAX = 256;
 static CAdPlugDatabase mydb;                     // Global Database instance
 static CAnalopl opl;                             // The only output device
 static CPlayer *p=0;                             // Main player (0 = none loaded)
