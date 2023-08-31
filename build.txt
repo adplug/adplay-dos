@@ -1,32 +1,16 @@
 AdPlay/DOS Build Requirements
 -----------------------------
-To compile AdPlay/DOS from source, you need at least Watcom C/C++ 11,
-OpenWatcom or DJGPP.
-
-Watcom C/C++ is a commercial compiler package. OpenWatcom can be
-downloaded from http://www.openwatcom.org/ and DJGPP can be downloaded
-from http://www.delorie.com/djgpp/.
+To compile AdPlay/DOS from source, you need DJGPP.
 
 AdPlay/DOS depends on the following libraries:
 
 Name and version:
 -----------------
 AdPlug >= 1.1
-WATCOM Timer Library >= 1.0, when using Watcom or OpenWatcom
 DJGPP Timer Library >= 1.0, when using DJGPP
 Portable Textmode Window Class Library >= 1.1
 
 All these libraries can be fetched from http://adplug.github.io/.
-
-On Watcom and OpenWatcom, AdPlay/DOS is configured to build with the
-PMODE/W DOS extender by default. So, when using the standard install,
-you need PMODE/W v1.33, additionally. It can be fetched freely from
-various sources on the Internet. I got my version from
-http://www.programmersheaven.com/.
-
-PMODE/W isn't open source software, however. If you prefer another DOS
-extender over PMODE/W, just specify the system definition of your extender
-on the SYSTEM variable in your CONFIG.MIF file.
 
 Build Instructions
 ------------------
@@ -46,11 +30,6 @@ Debug logging AdPlay/DOS
 To enable debug logging, you have to define the DEBUG preprocessor
 variable. Plase refer to the manual of your respective architecture
 for information on how to do this.
-
-When using Watcom or OpenWatcom, you can just add this line to your
-CONFIG.MIF file:
-
-CPPFLAGS += -dDEBUG
 
 This instructs all source files to generate debug logging output. The output
 goes to different logfiles by default. Please refer to the source code for

@@ -31,14 +31,6 @@
 #include <window/window.h>
 #include <window/wndman.h>
 
-// Watcom/OpenWatcom includes
-#ifdef __WATCOMC__
-#	include <env.h>
-#	include <ctype.h>
-#	include <direct.h>
-#	include <malloc.h>
-#endif
-
 // DJGPP includes
 #ifdef DJGPP
 #	include <dir.h>
@@ -89,10 +81,10 @@
  */
 #ifdef DJGPP
 int _crt0_startup_flags = _CRT0_FLAG_LOCK_MEMORY | _CRT0_FLAG_NO_LFN;
+const static int PATH_MAX = 256;
 #endif
 
 // global variables
-static int PATH_MAX = 256;
 static CAdPlugDatabase mydb;                     // Global Database instance
 static CAnalopl opl;                             // The only output device
 static CPlayer *p=0;                             // Main player (0 = none loaded)
@@ -204,9 +196,6 @@ static bool dosshell(char *cmd)
   int retval;
 
   setvideoinfo(&dosvideo);
-#ifdef __WATCOMC__
-  _heapshrink();
-#endif
   retval = system(cmd);
   setadplugvideo();
 
@@ -792,9 +781,6 @@ int main(int argc, char *argv[])
       timer_init(poll_player);
 #endif
       dopoll = true;
-#ifdef __WATCOMC__
-      _heapshrink();
-#endif
       system(getenv("COMSPEC"));
 #ifdef HAVE_WCC_TIMER_H
       tmClose();
@@ -871,16 +857,11 @@ int main(int argc, char *argv[])
 
   // init GUI
   if((tmpfn = TEMPNAM(getenv("TEMP"),"_AP")))
-#ifdef __WATCOMC__
-    mkdir(tmpfn);
-#else
   mkdir(tmpfn, S_IWUSR);
-#endif
+
   prgdir = getcwd(NULL, PATH_MAX); _dos_getdrive(&prgdrive);
   setadplugvideo();
-#ifdef HAVE_WCC_TIMER_H
-  tmInit(poll_player,0xffff,DEFSTACK);
-#elif defined HAVE_GCC_TIMER_H
+#ifdef HAVE_GCC_TIMER_H
   timer_init(poll_player);
 #endif
   songwnd.setcaption("Song Info"); volbars.setcaption("VBars");

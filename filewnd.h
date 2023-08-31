@@ -66,7 +66,7 @@ private:
         Error err;
         int arcmode;
         zipfile arc;
-        int PATH_MAX=256;
+        static const int PATH_MAX=256;
         char dirprefix[PATH_MAX];
         static unsigned char fc[];
 

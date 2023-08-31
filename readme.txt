@@ -1,7 +1,7 @@
-               ÛßßßßßÛ ÛÛßßßßßÜ ÛÛßßßßßÛ ÛÛ      ÛßßßßßÛ ÛÛ    ÛÛ
-               ÛÜÜÜÜÜÛ ÛÛ    ÛÛ ÛÛÜÜÜÜÜÛ ÛÛ      ÛÜÜÜÜÜÛ ÛÛÜÜÜÜÜÛ
-               Û    ÜÛ ÛÛ    ÛÛ ÛÛ       ÛÛ      Û    ÜÛ    ÜÛ
-               Û     Û ÛÛÜÜÜÜÜß ÛÛ       ÛÛÜÜÜÜÜ Û     Û    ÛÛ
+               ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½      ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½    ï¿½ï¿½
+               ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½    ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½      ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+               ï¿½    ï¿½ï¿½ ï¿½ï¿½    ï¿½ï¿½ ï¿½ï¿½       ï¿½ï¿½      ï¿½    ï¿½ï¿½    ï¿½ï¿½
+               ï¿½     ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½       ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½     ï¿½    ï¿½ï¿½
 
 AdPlay/DOS 1.6, Copyright (c) 2000 - 2006 Simon Peter <dn.tlp@gmx.net>
 Website: http://adplug.github.io
@@ -118,9 +118,7 @@ Returning from a DOS shell in a Windows 95 DOS Box will destroy the sound.
 Credits:
 --------
 AdPlay/DOS is completely programmed by Simon Peter. It depends on the AdPlug
-audio library, the WATCOM textmode window class library and the OpenCP WATCOM
-timer library, which are all also copyrighted by Simon Peter. The OpenCP
-WATCOM timer library is also copyrighted by Niklas Beisert, et al.
+audio library.
 
 All documentation is written by Simon Peter.
 
