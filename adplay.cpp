@@ -60,7 +60,7 @@
 #include "helptxt.h"
 
 // global defines
-#define ADPLAYVERS      "AdPlay 1.6"    // AdPlay version string
+#define ADPLAYVERS      "AdPlay 1.7"    // AdPlay version string
 #define DEFSTACK        (32*1024)       // stack size for timer-replay code
 #define CONFIGFILE      "adplay.ini"    // filename of default configuration file
 #define DEFCONFIG       "default"       // name of default configuration section
