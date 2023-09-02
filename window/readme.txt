@@ -35,7 +35,7 @@ x86            MS-DOS               DJGPP
 
 Building
 --------
-Please read one of the INSTALL.md file for build instructions!
+Please read the INSTALL.md file for build instructions!
 
 Debug Logging
 -------------

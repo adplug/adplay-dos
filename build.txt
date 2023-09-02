@@ -2,21 +2,24 @@ AdPlay/DOS Build Requirements
 -----------------------------
 To compile AdPlay/DOS from source, you need DJGPP.
 DJGPP can be downloaded from http://www.delorie.com/djgpp/.
+Alternatively you can download ready to be used binaries from:
+https://github.com/andrewwutw/build-djgpp/releases
+Also take a look at the Dockerfile and INSTALL.md file for more instructions.
 
 AdPlay/DOS depends on the following libraries:
 
 Name and version:
 -----------------
 AdPlug >= 1.1
-DJGPP Timer Library >= 1.0, when using DJGPP
+DJGPP Timer Library >= 1.0
 Portable Textmode Window Class Library >= 1.1
 
 All these libraries can be fetched from http://adplug.github.io/.
 
 Build Instructions
 ------------------
-Please read one of the INSTALL.* files for further build
-instructions. There is one for each supported architecture.
+Please read the INSTALL.md files for further build
+instructions.
 
 Debug logging the AdPlug core library with AdPlay/DOS
 -----------------------------------------------------
