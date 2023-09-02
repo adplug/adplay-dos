@@ -1,5 +1,6 @@
 #!/bin/bash
 #Libbinio
+cd /build/
 git clone https://github.com/adplug/libbinio.git --branch libbinio-1.5 --single-branch
 cd libbinio
 autoreconf --install
@@ -18,5 +19,5 @@ make install
 # To:
 # dependency_libs=' /djgpp/lib/gcc/i586-pc-msdosdjgpp/12.2.0/libstdc++.la'
 
-cp -v /build/libbinio-patches/libbinio.la /djgpp/lib/
+cp -v /build/adplay-dos/build/libbinio-patches/libbinio.la /djgpp/lib/
 cd ..

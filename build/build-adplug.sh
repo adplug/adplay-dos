@@ -1,5 +1,6 @@
 #!/bin/bash
 #Adplug
+cd /build/
 git clone https://github.com/adplug/adplug.git --branch adplug-2.3.3 --single-branch
 cd adplug
 autoreconf
@@ -27,7 +28,7 @@ automake --add-missing
 # patch rix.h   unsigned int getsubsongs();
 # patch rix.cpp unsigned int CrixPlayer::getsubsongs()
 
-cp -Rv /build/adplug-patches/* /build/adplug
+cp -Rv /build/adplay-dos/build/adplug-patches/* /build/adplug
 
 mkdir /destadplug
 make install DESTDIR=/destadplug

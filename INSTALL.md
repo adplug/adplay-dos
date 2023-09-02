@@ -34,3 +34,12 @@ chmod +x *.sh
 # Run build.sh script to compile everything
 ./build.sh
 ```
+
+Or you can run them from outside of the container:
+```bash
+sudo docker run -d -it --name mydjgppinstance --volume $(pwd):/build/adplay-dos djgpp-adplay /bin/bash
+sudo docker exec mydjgppinstance bash -c "source /djgpp/setenv && /build/adplay-dos/build/build-libbinio.sh"
+sudo docker exec mydjgppinstance bash -c "source /djgpp/setenv && /build/adplay-dos/build/build-gcctimer.sh"
+sudo docker exec mydjgppinstance bash -c "source /djgpp/setenv && /build/adplay-dos/build/build-adplug.sh"
+sudo docker exec mydjgppinstance bash -c "source /djgpp/setenv && /build/adplay-dos/build/build-adplay-dos.sh"
+```
