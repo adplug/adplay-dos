@@ -602,7 +602,7 @@ static void play(char *fn)
   // Update instruments window
   instwnd.erase();
   for(i=0;i<p->getinstruments();i++) {
-    sprintf(ins,"%3d�",i+1);
+    sprintf(ins,"%3d³",i+1);
     instwnd.outtext(ins);
     instwnd.puts(p->getinstrument(i).c_str());
   }
