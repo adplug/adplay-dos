@@ -13,7 +13,7 @@ ifeq ($(DEBUG),1)
 	CPPFLAGS += -DDEBUG
 endif
 
-DIST = readme.txt INSTALL.wat Makefile.bt Makefile.wcc Makefile.gcc build.txt \
+DIST = readme.txt INSTALL.md Makefile build.txt \
 	arcfile.h cfgparse.h filewnd.h helptxt.h adplay.cpp arcfile.cpp \
 	cfgparse.cpp filewnd.cpp adplay.ini
 

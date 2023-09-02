@@ -1,7 +1,7 @@
 INSTALL = install
 
-DIST = txtgfx_w.c txtgfx_d.c txtgfx.h window.cpp window.h wndman.cpp wndman.h \
-	debug.c debug.h readme.txt INSTALL.wat Makefile.bt Makefile.wat
+DIST = txtgfx_d.c txtgfx.h window.cpp window.h wndman.cpp wndman.h \
+	debug.c debug.h readme.txt INSTALL Makefile
 
 VERSION = 1.1
 NAME = window-$(VERSION)
