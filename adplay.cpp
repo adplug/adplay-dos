@@ -169,9 +169,7 @@ static void poll_player(void)
   if(oldfreq != p->getrefresh()) {        // new timer rate requested?
     oldfreq = p->getrefresh();
     del = wait = (unsigned int)(NORMALIZE / oldfreq);
-#ifdef HAVE_WCC_TIMER_H
-    tmSetNewRate(1192737/(oldfreq*(wait+1)));
-#elif defined HAVE_GCC_TIMER_H
+#if defined HAVE_GCC_TIMER_H
     timer_setrate((unsigned short)(1192737/(oldfreq*(wait+1))));
 #endif
   }
@@ -775,16 +773,12 @@ int main(int argc, char *argv[])
       exit(EXIT_FAILURE);
     } else {
       std::cout << "Background playback... (type EXIT to stop)" << std::endl;
-#ifdef HAVE_WCC_TIMER_H
-      tmInit(poll_player,0xffff,DEFSTACK);
-#elif defined HAVE_GCC_TIMER_H
+#if defined HAVE_GCC_TIMER_H
       timer_init(poll_player);
 #endif
       dopoll = true;
       system(getenv("COMSPEC"));
-#ifdef HAVE_WCC_TIMER_H
-      tmClose();
-#elif defined HAVE_GCC_TIMER_H
+#if defined HAVE_GCC_TIMER_H
       timer_deinit();
 #endif
       stop();
@@ -793,18 +787,14 @@ int main(int argc, char *argv[])
 
   /*** Batch playback mode ***/
   if(batchply) {
-#ifdef HAVE_WCC_TIMER_H
-    tmInit(poll_player,0xffff,DEFSTACK);
-#elif defined HAVE_GCC_TIMER_H
+#if defined HAVE_GCC_TIMER_H
     timer_init(poll_player);
 #endif
 
     for(i = myoptind; i < argc; i++)
       if(!(p = CAdPlug::factory(argv[i],&opl))) {
 	std::cout << "[" << argv[i] << "]: unsupported file type!" << std::endl;
-#ifdef HAVE_WCC_TIMER_H
-	tmClose();
-#elif defined HAVE_GCC_TIMER_H
+#if defined HAVE_GCC_TIMER_H
 	timer_deinit();
 #endif
 	exit(EXIT_FAILURE);
@@ -816,9 +806,7 @@ int main(int argc, char *argv[])
 	dopoll = false;
       }
 
-#ifdef HAVE_WCC_TIMER_H
-    tmClose();
-#elif defined HAVE_GCC_TIMER_H
+#if defined HAVE_GCC_TIMER_H
     timer_deinit();
 #endif
     exit(EXIT_SUCCESS);
@@ -1056,9 +1044,7 @@ int main(int argc, char *argv[])
   } while(!quit);
 
   // deinit
-#ifdef HAVE_WCC_TIMER_H
-    tmClose();
-#elif defined HAVE_GCC_TIMER_H
+#if defined HAVE_GCC_TIMER_H
     timer_deinit();
 #endif
   stop();

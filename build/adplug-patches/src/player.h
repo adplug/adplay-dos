@@ -22,11 +22,10 @@
 #ifndef H_ADPLUG_PLAYER
 #define H_ADPLUG_PLAYER
 
-#ifdef DJGPP
-#include <string.h>
-#endif
-#ifndef DJGPP
+#if not defined DJGPP
 #include <string>
+#else
+#include <string.h>
 #endif
 
 #include "fprovide.h"
