@@ -1,6 +1,7 @@
 AdPlay/DOS Build Requirements
 -----------------------------
 To compile AdPlay/DOS from source, you need DJGPP.
+DJGPP can be downloaded from http://www.delorie.com/djgpp/.
 
 AdPlay/DOS depends on the following libraries:
 
