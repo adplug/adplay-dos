@@ -81,7 +81,7 @@
  */
 #ifdef DJGPP
 int _crt0_startup_flags = _CRT0_FLAG_LOCK_MEMORY | _CRT0_FLAG_NO_LFN;
-const static int PATH_MAX = 256;
+const static int PATH_MAX = 247;
 #endif
 
 // global variables
