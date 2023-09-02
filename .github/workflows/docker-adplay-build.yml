@@ -12,12 +12,12 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag mydjgpp:$(date +%s)
+      run: docker build . --file Dockerfile --tag djgpp-adplay
   build-adplay:
     needs: build-djgpp-container
     runs-on: ubuntu-latest
     container:
-      image: mydjgpp:$(date +%s)
+      image: djgpp-adplay
       volumes:
         - $(pwd):/build/adplay-dos
     steps:
