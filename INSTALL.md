@@ -17,8 +17,10 @@ See build/Dockerfile
 
 Run with:
 ```
-sudo docker build ./ -t mydjgpp
-sudo docker run --volume $(pwd):/build/adplay-dos -it mydjgpp
-cd build
+sudo docker build ./ -t djgpp-adplay
+sudo docker run --volume $(pwd):/build/adplay-dos -it djgpp-adplay
+#Inside container
+cd /build/adplay-dos/build
+chmod +x *.sh
 ./build.sh
 ```

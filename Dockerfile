@@ -7,9 +7,5 @@ RUN wget https://github.com/andrewwutw/build-djgpp/releases/download/v3.4/djgpp-
 RUN bunzip2 djgpp-linux64-gcc1220.tar.bz2
 RUN tar -xvf djgpp-linux64-gcc1220.tar
 RUN mkdir /build
-RUN cd /build
-COPY ./build/*.sh /build
-COPY ./build/adplug-patches /build/adplug-patches
-COPY ./build/libbinio-patches /build/libbinio-patches
 RUN mkdir /build/adplay-dos
-RUN chmod +x /build/*.sh
+RUN cd /build

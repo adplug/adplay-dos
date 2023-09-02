@@ -10,7 +10,11 @@ autoupdate
 export libbinio_CFLAGS=-I/djgpp/include/libbinio
 export libbinio_LIBS=-L/djgpp/lib #-lbinio
 
-libtoolize --force && aclocal && autoconf && automake --add-missing && ./configure --host=i386-pc-msdosdjgpp --prefix=/djgpp iprefix=/djgpp
+libtoolize --force
+aclocal
+autoconf
+automake --add-missing
+./configure --host=i386-pc-msdosdjgpp --prefix=/djgpp iprefix=/djgpp
 
 # patch makefile
 # CXXFLAGS += -Wno-deprecated -I/djgpp/include/libbinio
