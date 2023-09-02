@@ -1,0 +1,27 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build-djgpp-container:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build the Docker image
+      run: docker build . --file Dockerfile --tag djgpp-adplay
+  build-adplay:
+    needs: build-djgpp-container
+    runs-on: ubuntu-latest
+    container:
+      image: djgpp-adplay
+      volumes:
+        - $(pwd):/build/adplay-dos
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build adplay-dos
+      run: /build/build.sh
+   
