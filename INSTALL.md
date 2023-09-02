@@ -13,14 +13,24 @@
 # DJGPP cross compilation steps
 Build system used is Ubuntu 22.04, using GCC 12.2.0
 
-See build/Dockerfile
+See Dockerfile in the root of this project on how this is setup.
+Prerequisites:
+- Docker
 
-Run with:
-```
+Create your build environment/image with docker:
+```bash
+# Build the image with DJGPP for cross compilation
 sudo docker build ./ -t djgpp-adplay
+
+# Run the image with your local working directory as code mounted in volume
 sudo docker run --volume $(pwd):/build/adplay-dos -it djgpp-adplay
-#Inside container
+```
+Inside the container:
+```bash
+# Switch to mounted build directory
 cd /build/adplay-dos/build
+# Make scripts executable
 chmod +x *.sh
+# Run build.sh script to compile everything
 ./build.sh
 ```
