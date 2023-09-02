@@ -29,15 +29,13 @@ is supported on a particular architecture.
 
 The following back-ends are provided:
 
-Architecture    Operating System        Compiler
-------------    ----------------        --------
-x86             MS-DOS                  Watcom
-x86		MS-DOS			DJGPP
+Architecture   Operating System     Compiler
+------------   ----------------     --------
+x86            MS-DOS               DJGPP
 
 Building
 --------
-Please read one of the INSTALL.* files for build instructions! There
-is a file for each supported architecture.
+Please read one of the INSTALL.md file for build instructions!
 
 Debug Logging
 -------------
