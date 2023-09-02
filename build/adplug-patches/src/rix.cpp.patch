@@ -1,0 +1,15 @@
+--- rixOrg.cpp	2023-09-02 21:47:39.111213093 +0200
++++ rix2.cpp	2023-09-02 21:54:50.150456645 +0200
+@@ -153,7 +153,12 @@
+   data_initial();
+ }
+ 
++#ifdef DJGPP
++unsigned int CrixPlayer::getsubsongs()
++#endif
++#ifndef DJGPP
+ uint32_t CrixPlayer::getsubsongs()
++#endif
+ {
+ 	if(flag_mkf)
+ 	{

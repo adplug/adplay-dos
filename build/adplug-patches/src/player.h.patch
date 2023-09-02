@@ -1,0 +1,14 @@
+--- playerOrg.h	2023-09-02 21:45:21.226255749 +0200
++++ player.h	2023-09-02 21:47:02.682955172 +0200
+@@ -22,7 +22,11 @@
+ #ifndef H_ADPLUG_PLAYER
+ #define H_ADPLUG_PLAYER
+ 
++#if not defined DJGPP
+ #include <string>
++#else
++#include <string.h>
++#endif
+ 
+ #include "fprovide.h"
+ #include "opl.h"

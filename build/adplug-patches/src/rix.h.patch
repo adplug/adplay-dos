@@ -1,0 +1,15 @@
+--- rixOrg.h	2023-09-02 21:47:42.919240243 +0200
++++ rix.h	2023-09-02 21:51:19.616835248 +0200
+@@ -34,7 +34,12 @@
+   bool update();
+   void rewind(int subsong);
+   float getrefresh();
++  #ifdef DJGPP
++  unsigned int getsubsongs();
++  #endif
++  #ifndef DJGPP
+   uint32_t getsubsongs();
++  #endif
+ 
+   std::string gettype()
+     { return std::string("Softstar RIX OPL Music Format"); };
