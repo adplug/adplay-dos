@@ -1,5 +1,9 @@
 *.err
 *.log
+*.o
+*.a
+*.zip
+*.exe
 srcdist.lst
 bindist.lst
 make.sh
