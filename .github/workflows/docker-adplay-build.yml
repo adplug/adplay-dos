@@ -7,13 +7,14 @@ on:
     branches: [ "master" ]
 
 jobs:
-  build-container:
+  build-djgpp-container:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
     - name: Build the Docker image
       run: docker build . --file Dockerfile --tag mydjgpp:$(date +%s)
   build-adplay:
+    needs: build-djgpp-container
     runs-on: ubuntu-latest
     container:
       image: mydjgpp:$(date +%s)
