@@ -1,3 +1,4 @@
+#!/bin/bash
 # You can also do a clean build from git instead of code copied into Docker container
 # git clone https://github.com/adplug/adplay-dos.git --branch dos-1.6 --single-branch
 cd adplay-dos

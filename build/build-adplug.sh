@@ -1,3 +1,4 @@
+#!/bin/bash
 #Adplug
 git clone https://github.com/adplug/adplug.git --branch adplug-2.3.3 --single-branch
 cd adplug
