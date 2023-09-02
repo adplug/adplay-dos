@@ -1,5 +1,7 @@
 #!/bin/bash
-#Libbinio
+
+# Build Libbinio
+
 cd /build/
 git clone https://github.com/adplug/libbinio.git --branch libbinio-1.5 --single-branch
 cd libbinio
