@@ -7,9 +7,7 @@
 +#ifdef DJGPP
 +#include <string.h>
 +#endif
-+#ifndef DJGPP
  #include <string>
-+#endif
  
  #include "player.h"
  #include "opl.h"
