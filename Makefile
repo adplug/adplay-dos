@@ -2,15 +2,21 @@ INSTALL = install
 STRIP = strip
 ZIP = zip
 
+prefix = /usr/local/djgpp
+
 CPPFLAGS += -DHAVE_GCC_TIMER_H
-CXXFLAGS += -Wno-deprecated
-LDFLAGS += -lstdcxx -lwindow -ladplug -lbinio -lgcctimer
+CPPFLAGS += -O3 -Wall -Wextra
+CXXFLAGS += -O3 -Wall -Wextra
+CPPFLAGS += -I$(prefix)/include/libbinio -I$(prefix)/include -I$(prefix)/include/adplug -I$(prefix)/include/window
+CXXFLAGS += -I$(prefix)/include/libbinio -I$(prefix)/include -I$(prefix)/include/adplug -I$(prefix)/include/window
+LDFLAGS += -lstdc++ -lwindow -ladplug -lbinio -lgcctimer
+LDFLAGS += -L$(prefix)/lib -L$(prefix)/lib/gcc/i586-pc-msdosdjgpp/$(gcc_version)
 
 ifeq ($(DEBUG),1)
 	CPPFLAGS += -DDEBUG
 endif
 
-DIST = readme.txt INSTALL.wat Makefile.bt Makefile.wcc Makefile.gcc build.txt \
+DIST = readme.txt INSTALL.md Makefile build.txt \
 	arcfile.h cfgparse.h filewnd.h helptxt.h adplay.cpp arcfile.cpp \
 	cfgparse.cpp filewnd.cpp adplay.ini
 
@@ -20,7 +26,6 @@ VERSION = 1.6
 NAME = adplay-$(VERSION)
 BINARYNAME = adplay$(subst .,,$(VERSION))
 
-prefix = /usr/local
 bindir = $(prefix)/bin
 srcdir = .
 

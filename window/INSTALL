@@ -2,7 +2,7 @@ Build notes
 -----------
 - DJGPP is the only supported GCC architecture right now.
 
-- Please use Makefile.gcc.
+- Please use Makefile
 
 - There are four Makefile targets:
   - The default target builds the library

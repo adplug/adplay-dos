@@ -1,12 +1,17 @@
 INSTALL = install
 
-DIST = txtgfx_w.c txtgfx_d.c txtgfx.h window.cpp window.h wndman.cpp wndman.h \
-	debug.c debug.h readme.txt INSTALL.wat Makefile.bt Makefile.wat
+CC = gcc
+DIST = txtgfx_d.c txtgfx.h window.cpp window.h wndman.cpp wndman.h \
+	debug.c debug.h readme.txt INSTALL Makefile
 
 VERSION = 1.1
+
+CPPFLAGS += -O3 -Wall -Wextra -Werror
+CXXFLAGS += -O3 -Wall -Wextra -Werror
+
 NAME = window-$(VERSION)
 
-prefix = /usr/local
+prefix = /usr/local/djgpp
 includedir = $(prefix)/include/window
 libdir = $(prefix)/lib
 srcdir = .

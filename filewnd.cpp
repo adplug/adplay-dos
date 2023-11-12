@@ -25,11 +25,6 @@
 #include <string.h>
 #include <adplug/adplug.h>
 
-#ifdef __WATCOMC__
-#	include <sys/types.h>
-#	include <direct.h>
-#endif
-
 #ifdef DJGPP
 #	include <unistd.h>
 #	include <dirent.h>
@@ -183,9 +178,7 @@ bool FileWnd::is_subdir(struct dirent *direntp)
 {
   bool retval;
 
-#ifdef __WATCOMC__
-  retval = direntp->d_attr & _A_SUBDIR ? true : false;
-#elif defined(DJGPP)
+#if defined(DJGPP)
   unsigned int attr;
 
   _dos_getfileattr(direntp->d_name, &attr);
