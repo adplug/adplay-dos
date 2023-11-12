@@ -11,3 +11,6 @@ window/config.mif
 window/window.lib
 window/*.err
 window/make.sh
+timer/config.mif
+timer/timer.lib
+timer/*.err
