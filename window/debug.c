@@ -48,7 +48,7 @@ void Window_LogWrite(const char *fmt, ...)
 
 #else
 
-void Window_LogFile(char *filename) { }
-void Window_LogWrite(char *fmt, ...) { }
+void Window_LogFile([[maybe_unused]]char *filename) { }
+void Window_LogWrite([[maybe_unused]]char *fmt, ...) { }
 
 #endif

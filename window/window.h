@@ -64,8 +64,8 @@ protected:
         bool autocolor;                 // automatically colorize output flag
 
 	// tools
-        void puts(char *str);           // like puts(), but in the window
-        void outtext(char *str);        // outputs text, but does no linefeed
+        void puts(const char *str);           // like puts(), but in the window
+        void outtext(const char *str);        // outputs text, but does no linefeed
         void outc(char c);              // outputs the char c
 
 	void setcursor(unsigned int newx, unsigned int newy)	// set window-cursor to new position

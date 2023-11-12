@@ -124,12 +124,18 @@ CWindow *CWindow::getfocus()
 void CWindow::redraw(void)
 {
 	unsigned char i,j,wndx,wndy=0;
+        const unsigned char window_upper_left_char = 218;   // Window box upper left code page 437,      unicode representation: ‚îå
+        const unsigned char window_upper_right_char = 191;  // Window box upper right code page 437,     unicode representation: ‚îê
+        const unsigned char window_bottom_left_char = 192;  // Window box lower left code page 437,      unicode representation: ‚îî
+        const unsigned char window_bottom_right_char = 217; // Window box lower right code page 437,     unicode representation: ‚îò
+        const unsigned char window_horizontal_line = 196;   // Window box horizontal bar  code page 437, unicode representation: ‚îÄ
+        const unsigned char window_vertical_line = 179;     // Window box vertical bar code page 437,    unicode representation: ‚îÇ
 
 	settextposition(y,x);
         ::setcolor(color[Border]);
-	outchar('⁄');
+	outchar(window_upper_left_char);
 	for(i=x+1;i<x+((sizex-1)/2-(strlen(caption)/2+2));i++)
-		outchar('ƒ');
+		outchar(window_horizontal_line); 
 	::outtext("> ");
         if(focus == this)
                 ::setcolor(color[Focus]);
@@ -139,15 +145,15 @@ void CWindow::redraw(void)
         ::setcolor(color[Border]);
 	::outtext(" <");
 	for(i+=strlen(caption)+4;i<x+sizex-1;i++)
-		outchar('ƒ');
-	outchar('ø');
+		outchar(window_horizontal_line);
+	outchar(window_upper_right_char);
 	for(j=y+1;j<y+sizey-1;j++) {
 		settextposition(j,x);
 		wndx = 0;
 		for(i=x;i<x+sizex;i++)
 			if(i==x || i==x+sizex-1) {
                                 ::setcolor(color[Border]);
-				outchar('≥');
+				outchar(window_vertical_line);
 			} else {
 				::setcolor(colmap[wndy*insizex+wndx]);
 				outchar(wndbuf[wndy*insizex+wndx]);
@@ -157,10 +163,10 @@ void CWindow::redraw(void)
 	}
         ::setcolor(color[Border]);
 	settextposition(y+sizey-1,x);
-	outchar('¿');
+	outchar(window_bottom_left_char);
 	for(i=x+1;i<x+sizex-1;i++)
-		outchar('ƒ');
-	outchar('Ÿ');
+		outchar(window_horizontal_line);
+	outchar(window_bottom_right_char);
 }
 
 void CWindow::outc(char c)
@@ -172,11 +178,19 @@ void CWindow::outc(char c)
 		wndbuf[curpos] = c;
                 if(autocolor) colmap[curpos] = color[In];
 		curpos++;
-	} else
-		setcursor(0,wherey()+1);
+	}
+        if(c == '\n') {
+                // Newline will move the cursor one row down, unless it is the last in the string
+                // and we just started on a new window row. This would add an extra unneeded line.	
+                if ((wherex() % insizex == 0) && curpos > 0) {
+                        // Do nothing, cursor will move to the next row down when printing out next character anyway
+                } else {
+                        setcursor(0,wherey()+1);
+                }
+        }
 }
 
-void CWindow::outtext(char *str)
+void CWindow::outtext(const char *str)
 {
 	unsigned int i;
 
@@ -184,7 +198,7 @@ void CWindow::outtext(char *str)
 		outc(str[i]);
 }
 
-void CWindow::puts(char *str)
+void CWindow::puts(const char *str)
 {
 	outtext(str);
 	setcursor(0,wherey()+1);
