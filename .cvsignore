@@ -1,6 +1,0 @@
-config.mif
-*.err
-*.log
-srcdist.lst
-bindist.lst
-make.sh
