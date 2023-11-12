@@ -39,10 +39,6 @@ CWndMan::~CWndMan()
 bool CWndMan::reg(CWindow &nwnd)
 {
 	window *nw;
-
-	if(!(&nwnd))
-		return false;
-
 	nw = new window;
 	nw->wnd = &nwnd;
 	nw->next = w;

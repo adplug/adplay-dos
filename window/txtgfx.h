@@ -76,7 +76,7 @@ void outchar(char c);
  * c	= character to write to video memory
  */
 
-void outtext(char *str);
+void outtext(const char *str);
 /* write a string directly into video memory
  *
  * str	= string to write to video memory

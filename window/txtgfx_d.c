@@ -120,7 +120,7 @@ void outchar(char c)
 	scrpos++;
 }
 
-void outtext(char *str)
+void outtext(const char *str)
 {
 	unsigned int i;
 

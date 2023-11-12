@@ -1,6 +1,6 @@
 Portable Textmode Window Class Library
 Copyright (c) 2000 - 2002, 2006 Simon Peter <dn.tlp@gmx.net>
-Version 1.1
+Version 1.2
 
 Description
 -----------
@@ -69,6 +69,9 @@ freely, subject to the following restrictions:
 
 History
 -------
+Changes from version 1.1 to version 1.2:
+- Fixed bug which could cause newlines at the end of a row in a window to wrap around and cause an extra newline (https://github.com/adplug/adplay-dos/issues/1)
+
 Changes from version 1.0 to version 1.1:
 - Added support for the DJGPP compiler.
 - Miscellaneous fixes (mainly cosmetic).
