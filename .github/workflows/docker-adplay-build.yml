@@ -1,0 +1,100 @@
+name: AdPlay for DOS CD
+
+on:
+  - push
+  - pull_request
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        gcc_compiler: [12.2.0]
+
+      fail-fast: false
+
+    runs-on: ${{matrix.os}}
+
+    steps:
+        - name: Checkout AdPlug
+          uses: actions/checkout@v4
+          with:
+            repository: 'adplug/adplug'
+            ref: 'db2cb13954adf124eed768ef62c8ba7d926f0d39' # Target specific commit, it contains patches for Adplug to provide DJGPP/Adplay DOS compatibility. TODO: Replace with new AdPlug tagged version when released
+            path: adplug
+        - name: Checkout libbinio
+          uses: actions/checkout@v4
+          with:
+            repository: 'adplug/libbinio'
+            path: libbinio
+        - name: Checkout gcctimer
+          uses: actions/checkout@v4
+          with:
+            repository: 'adplug/gcctimer'
+            path: gcctimer
+        - name: Checkout AdPlay for DOS (this repository)
+          uses: actions/checkout@v4
+          with:
+            path: adplay
+    
+        - name: Install Linux packages
+          run: |
+            sudo apt update
+            sudo apt install -y texlive-latex-base texinfo libfl2 libfl-dev bison flex curl make texinfo zlib1g-dev unzip wget bzip2 zip git bash automake libtool pkg-config upx
+            # Flex is required, but even though it's in the GitHub runner image, and marked as installed
+            # it's still missing some things, see https://github.com/orgs/community/discussions/45029
+   
+            if [[ ${{ matrix.gcc_compiler }} == "12.2.0" ]]; then
+              wget https://github.com/andrewwutw/build-djgpp/releases/download/v3.4/djgpp-linux64-gcc1220.tar.bz2
+              bzcat djgpp-linux64-gcc1220.tar.bz2 | sudo tar -x --directory /usr/local
+            else
+              echo 'Unsupported version of GCC/DJGPP'
+              exit 1
+            fi
+   
+        - name: Set DJGPP environment
+          run: |
+            echo 'compile_opts=--host=i586-pc-msdosdjgpp --prefix=/usr/local/djgpp PKG_CONFIG_PATH=/usr/local/djgpp/lib/pkgconfig' >> $GITHUB_ENV
+            echo '/usr/local/djgpp/bin/' >> $GITHUB_PATH
+    
+        - name: Install libbinio
+          run: |
+            pushd libbinio && autoreconf -i && ./configure --enable-maintainer-mode ${{ env.compile_opts }} && make && sudo env PATH="$PATH" make install && popd
+    
+        - name: Install gcctimer
+          run: |
+            source /usr/local/djgpp/setenv
+            pushd gcctimer
+            make CC=gcc prefix=/usr/local/djgpp RANLIB=ranlib
+            sudo env PATH="$PATH" make CC=gcc prefix=/usr/local/djgpp install
+            popd
+
+        - name: make AdPlug
+          run: |
+            ulimit -c unlimited -S
+            pushd adplug
+            autoreconf -i
+            ./configure ${{ env.compile_opts }}  || cat config.log
+            sudo env PATH="$PATH" make install
+            popd
+
+        - name: Build window library
+          run: |
+            pushd adplay/window
+            source /usr/local/djgpp/setenv
+            make RANLIB=ranlib
+            sudo env PATH="$PATH" make install
+            popd
+
+        - name: Build AdPlay for DOS
+          run: |
+            source /usr/local/djgpp/setenv
+            pushd adplay
+            make gcc_version=${{ matrix.gcc_compiler }} binarydist
+            popd
+        - name: Upload artifact
+          uses: actions/upload-artifact@v3
+          with:
+            name: adplay
+            path: |
+              adplay/*.zip
