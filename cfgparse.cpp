@@ -36,7 +36,7 @@
 
 static FILE *f_log;
 
-static void dbg_printf(char *fmt, ...)
+static void dbg_printf(const char *fmt, ...)
 {
         va_list argptr;
 
@@ -46,7 +46,7 @@ static void dbg_printf(char *fmt, ...)
         va_end(argptr);
 }
 #else
-static void dbg_printf(char *fmt, ...) { }
+static void dbg_printf([[maybe_unused]] const char *fmt, ...) { }
 #endif
 
 #include "cfgparse.h"

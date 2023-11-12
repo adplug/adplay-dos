@@ -21,6 +21,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <cstring>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -81,6 +82,7 @@
  */
 #ifdef DJGPP
 int _crt0_startup_flags = _CRT0_FLAG_LOCK_MEMORY | _CRT0_FLAG_NO_LFN;
+const static int PATH_MAX = 247;
 #endif
 
 // global variables
@@ -115,7 +117,7 @@ static int onsongend = 0;                        // What to do on song end
 
 static FILE *f_log;
 
-static void dbg_printf(char *fmt, ...)
+static void dbg_printf(const char *fmt, ...)
 {
   static char logbuffer[256];
 
@@ -129,7 +131,7 @@ static void dbg_printf(char *fmt, ...)
   fprintf(f_log,logbuffer);
 }
 #else
-static void dbg_printf(char *fmt, ...) { }
+static void dbg_printf([[maybe_unused]] const char *fmt, ...) { }
 #endif
 
 static void poll_player(void)
@@ -599,7 +601,7 @@ static void play(char *fn)
   // Update instruments window
   instwnd.erase();
   for(i=0;i<p->getinstruments();i++) {
-    sprintf(ins,"%3d�",i+1);
+    sprintf(ins,"%3d\xB3",i+1);  // \xB3 is window box vertical bar character, in code page 437, unicode representation: │
     instwnd.outtext(ins);
     instwnd.puts(p->getinstrument(i).c_str());
   }
@@ -693,7 +695,8 @@ int main(int argc, char *argv[])
 {
   char          inkey=0, *prgdir, *curdir, *program_name;
   bool          ext, validcfg, quit = false, bkgply = false, batchply = false;
-  unsigned int	opt, prgdrive, i;
+  unsigned int	opt, prgdrive;
+  int i;
   CWindow       *focus;
 
 #ifdef DEBUG
