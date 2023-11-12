@@ -66,6 +66,7 @@ private:
         Error err;
         int arcmode;
         zipfile arc;
+        static const int PATH_MAX=247;
         char dirprefix[PATH_MAX];
         static unsigned char fc[];
 
@@ -73,7 +74,7 @@ private:
         void listdrives();
         void listarc(archive &a);
         char *extract(char *newfn, archive &a, char *oldfn);
-        unsigned int drivenum(char *fname);
+        unsigned int drivenum(const char *fname);
         void sortinsert(FileItem *newitem);
 	bool supported(const char *filename);
 	bool is_subdir(struct dirent *direntp);
