@@ -31,14 +31,6 @@
 #include <window/window.h>
 #include <window/wndman.h>
 
-// Watcom/OpenWatcom includes
-#ifdef __WATCOMC__
-#	include <env.h>
-#	include <ctype.h>
-#	include <direct.h>
-#	include <malloc.h>
-#endif
-
 // DJGPP includes
 #ifdef DJGPP
 #	include <dir.h>
@@ -47,25 +39,16 @@
 #	include <crt0.h>
 #endif
 
-#ifdef HAVE_WCC_TIMER_H
-#	include <timer.h>
-#elif defined HAVE_GCC_TIMER_H
+#if defined HAVE_GCC_TIMER_H
 #	include <gcctimer.h>
 #else
 #	error No suitable timer handling library found
 #endif
 
-// Decide which _tempnam to use
-#ifdef __WATCOMC__
-#	define TEMPNAM	_tempnam
-#else
-#	define TEMPNAM	tempnam
-#endif
+#define TEMPNAM	tempnam
 
 // Decide which _splitpath to use
-#ifdef __WATCOMC__
-#	define SPLITPATH	_splitpath
-#elif defined DJGPP
+#ifdef DJGPP
 #	define SPLITPATH	fnsplit
 #else
 #	error No _splitpath equivalent found
@@ -185,9 +168,7 @@ static void poll_player(void)
   if(oldfreq != p->getrefresh()) {        // new timer rate requested?
     oldfreq = p->getrefresh();
     del = wait = (unsigned int)(NORMALIZE / oldfreq);
-#ifdef HAVE_WCC_TIMER_H
-    tmSetNewRate(1192737/(oldfreq*(wait+1)));
-#elif defined HAVE_GCC_TIMER_H
+#if defined HAVE_GCC_TIMER_H
     timer_setrate((unsigned short)(1192737/(oldfreq*(wait+1))));
 #endif
   }
@@ -212,9 +193,6 @@ static bool dosshell(char *cmd)
   int retval;
 
   setvideoinfo(&dosvideo);
-#ifdef __WATCOMC__
-  _heapshrink();
-#endif
   retval = system(cmd);
   setadplugvideo();
 
@@ -621,7 +599,7 @@ static void play(char *fn)
   // Update instruments window
   instwnd.erase();
   for(i=0;i<p->getinstruments();i++) {
-    sprintf(ins,"%3d³",i+1);
+    sprintf(ins,"%3dï¿½",i+1);
     instwnd.outtext(ins);
     instwnd.puts(p->getinstrument(i).c_str());
   }
@@ -788,45 +766,35 @@ int main(int argc, char *argv[])
   CAdPlug::set_database(&mydb);
 
   /*** Background playback mode ***/
-  if(bkgply)
+  if(bkgply) {
     if(!(p = CAdPlug::factory(argv[myoptind],&opl))) {
       std::cout << "[" << argv[myoptind] << "]: unsupported file type!" << std::endl;
       exit(EXIT_FAILURE);
     } else {
       std::cout << "Background playback... (type EXIT to stop)" << std::endl;
-#ifdef HAVE_WCC_TIMER_H
-      tmInit(poll_player,0xffff,DEFSTACK);
-#elif defined HAVE_GCC_TIMER_H
+#if defined HAVE_GCC_TIMER_H
       timer_init(poll_player);
 #endif
       dopoll = true;
-#ifdef __WATCOMC__
-      _heapshrink();
-#endif
       system(getenv("COMSPEC"));
-#ifdef HAVE_WCC_TIMER_H
-      tmClose();
-#elif defined HAVE_GCC_TIMER_H
+#if defined HAVE_GCC_TIMER_H
       timer_deinit();
 #endif
       stop();
       exit(EXIT_SUCCESS);
     }
+  }
 
   /*** Batch playback mode ***/
   if(batchply) {
-#ifdef HAVE_WCC_TIMER_H
-    tmInit(poll_player,0xffff,DEFSTACK);
-#elif defined HAVE_GCC_TIMER_H
+#if defined HAVE_GCC_TIMER_H
     timer_init(poll_player);
 #endif
 
     for(i = myoptind; i < argc; i++)
       if(!(p = CAdPlug::factory(argv[i],&opl))) {
 	std::cout << "[" << argv[i] << "]: unsupported file type!" << std::endl;
-#ifdef HAVE_WCC_TIMER_H
-	tmClose();
-#elif defined HAVE_GCC_TIMER_H
+#if defined HAVE_GCC_TIMER_H
 	timer_deinit();
 #endif
 	exit(EXIT_FAILURE);
@@ -838,9 +806,7 @@ int main(int argc, char *argv[])
 	dopoll = false;
       }
 
-#ifdef HAVE_WCC_TIMER_H
-    tmClose();
-#elif defined HAVE_GCC_TIMER_H
+#if defined HAVE_GCC_TIMER_H
     timer_deinit();
 #endif
     exit(EXIT_SUCCESS);
@@ -879,16 +845,11 @@ int main(int argc, char *argv[])
 
   // init GUI
   if((tmpfn = TEMPNAM(getenv("TEMP"),"_AP")))
-#ifdef __WATCOMC__
-    mkdir(tmpfn);
-#else
   mkdir(tmpfn, S_IWUSR);
-#endif
+
   prgdir = getcwd(NULL, PATH_MAX); _dos_getdrive(&prgdrive);
   setadplugvideo();
-#ifdef HAVE_WCC_TIMER_H
-  tmInit(poll_player,0xffff,DEFSTACK);
-#elif defined HAVE_GCC_TIMER_H
+#ifdef HAVE_GCC_TIMER_H
   timer_init(poll_player);
 #endif
   songwnd.setcaption("Song Info"); volbars.setcaption("VBars");
@@ -1083,9 +1044,7 @@ int main(int argc, char *argv[])
   } while(!quit);
 
   // deinit
-#ifdef HAVE_WCC_TIMER_H
-    tmClose();
-#elif defined HAVE_GCC_TIMER_H
+#if defined HAVE_GCC_TIMER_H
     timer_deinit();
 #endif
   stop();
