@@ -4,7 +4,7 @@ CC = gcc
 DIST = txtgfx_d.c txtgfx.h window.cpp window.h wndman.cpp wndman.h \
 	debug.c debug.h readme.txt INSTALL Makefile
 
-VERSION = 1.1
+VERSION = 1.2
 
 CPPFLAGS += -O3 -Wall -Wextra -Werror
 CXXFLAGS += -O3 -Wall -Wextra -Werror

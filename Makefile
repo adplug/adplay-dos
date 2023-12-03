@@ -22,7 +22,7 @@ DIST = readme.txt INSTALL.md Makefile build.txt \
 
 BINARYDIST = adplay.exe $(srcdir)/adplay.ini $(srcdir)/readme.txt
 
-VERSION = 1.6
+VERSION = 1.7
 NAME = adplay-$(VERSION)
 BINARYNAME = adplay$(subst .,,$(VERSION))
 

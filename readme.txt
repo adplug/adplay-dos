@@ -3,7 +3,7 @@
                �    �� ��    �� ��       ��      �    ��    ��
                �     � �������� ��       ������� �     �    ��
 
-AdPlay/DOS 1.6, Copyright (c) 2000 - 2006 Simon Peter <dn.tlp@gmx.net>
+AdPlay/DOS 1.7, Copyright (c) 2000 - 2006 Simon Peter <dn.tlp@gmx.net>
 Website: http://adplug.github.io
 
 Description:
@@ -15,60 +15,56 @@ is supported.
 
 Supported formats:
 ------------------
-AdPlug implements unique file replayers for each supported format in order to
-achieve the best possible replay quality. Below is a list of all currently
-supported file formats along with information about possible replay issues.
-Players marked as "preliminary" aren't considered final by the author(s) and
-may contain many replay issues, but are included for testing purposes anyway.
+AdPlug implements unique file replayers for each supported audio format in order to achieve the best possible replay quality. Players marked as "preliminary" aren't considered final by the author and may contain many replay issues, but are included for testing purposes anyway. As of now, the following formats are supported:
 
 - A2M: AdLib Tracker 2 by subz3ro
-  - Unimplemented commands (version 1-4): FF1 - FF9, FAx - FEx
-  - Unimplemented commands (version 5-8): Gxy, Hxy, Kxy - &xy
-  - In version 5-8 files, instrument panning & the flags byte is ignored
-  - Only SixPack compressed and uncompressed files are supported
-  - All OPL3 functionality is absent (not possible with AdLib)
+- ADL: Westwood ADL File Format
+- AGD: Herbulot AdLib Gold System (HERAD) by Remi Herbulot (preliminary)
 - AMD: AMUSIC Adlib Tracker by Elyssis
-- BAM: Bob's Adlib Music Format by Bob
+- BAM: Bob's Adlib Music Format
+- BMF: Easy AdLib 1.0 by The Brain
 - CFF: BoomTracker 4.0 by CUD
 - CMF: Creative Music File Format by Creative Technology
-  - Unimplemented: AdLib rhythm mode
+- CMF: SoundFX Macs Opera tracker by Linel
 - D00: EdLib by Vibrants
-  - Bugs: Hard restart SR sometimes sound wrong
 - DFM: Digital-FM by R.Verhaag
 - DMO: Twin TrackPlayer by TwinTeam
-- DRO: DOSBox Raw OPL
+- DRO: DOSBox Raw OPL Format
 - DTM: DeFy Adlib Tracker by DeFy
+- GOT: God Of Thunder Music by Roy Davis of Adept Software
+- HA2: Herbulot AdLib System v2 (HERAD) by Remi Herbulot (preliminary)
 - HSC: HSC Adlib Composer by Hannes Seifert, HSC-Tracker by Electronic Rats
 - HSP: HSC Packed by Number Six / Aegis Corp.
-- IMF: Apogee IMF File Format by Apogee
-- KSM: Ken Silverman's Adlib Music Format by Ken Silverman
-  - Needs file 'insts.dat' in the same directory as loaded file
+- HSQ: Herbulot AdLib System (HERAD) by Remi Herbulot (preliminary)
+- IMF: Apogee IMF File Format
+- IMS: IMPlay Song Format
+- JBM: JBM Adlib Music Format
+- KSM: Ken Silverman's Music Format
 - LAA: LucasArts AdLib Audio File Format by LucasArts
-  - Bugs: Some volumes are a bit off
 - LDS: LOUDNESS Sound System
-- M: Ultima 6 Music Format by Origin
+- M: Origin AdLib Music Format
 - MAD: Mlat Adlib Tracker
+- MDI: AdLib MIDIPlay File Format by Ad Lib Inc.
 - MID: MIDI Audio File Format
 - MKJ: MKJamz by M \ K Productions (preliminary)
-  - Bugs: Still many replay flaws
+- MSC: AdLib MSCplay
 - MTK: MPU-401 Trakker by SuBZeR0
+- MUS: AdLib MIDI Music Format by Ad Lib Inc.
 - RAD: Reality ADlib Tracker by Reality
 - RAW: RdosPlay RAW file format by RDOS
-  - Unimplemented: OPL3 register writes (not possible with AdLib)
+- RIX: Softstar RIX OPL Music Format
 - ROL: AdLib Visual Composer by AdLib Inc.
-  - Needs file 'standard.bnk' in the same directory as loaded file
-    (be careful under UNIX - it's case sensitive!)
-- S3M: Scream Tracker 3 by Future Crew
-  - Bugs: Extra Fine Slides (EEx, FEx) & Fine Vibrato (Uxy) are inaccurate
+- S3M: Screamtracker 3 by Future Crew
 - SA2: Surprise! Adlib Tracker 2 by Surprise! Productions
 - SAT: Surprise! Adlib Tracker by Surprise! Productions
-- SCI: Sierra's AdLib Audio File Format by Sierra On-Line Inc.
-  - Needs file '???patch.003' in the same directory as loaded file, where
-    '???' are the first 3 characters of the loaded file
-  - Bugs: Some instruments are messed up
+- SCI: Sierra's AdLib Audio File Format
+- SDB: Herbulot AdLib System (HERAD) by Remi Herbulot (preliminary)
 - SNG: SNGPlay by BUGSY of OBSESSION
 - SNG: Faust Music Creator by FAUST
 - SNG: Adlib Tracker 1.0 by TJ
+- SOP: Note Sequencer by Lee Ho Bum (sopepos)
+- SQX: Herbulot AdLib System (HERAD) by Remi Herbulot (preliminary)
+- VGM: Video Game Music 1.51 by Valley Bell (preliminary)
 - XAD: eXotic ADlib Format by Riven the Mage
 - XMS: XMS-Tracker by MaDoKaN/E.S.G
 - XSM: eXtra Simple Music by Davey W Taylor
@@ -146,6 +142,11 @@ freely, subject to the following restrictions:
 
 Release History:
 ----------------
+- 1.7 (2023-10-20)
+  - Built with Adplug 2.3.3+ (Oct 5, 2023 commit db2cb13954adf124eed768ef62c8ba7d926f0d39)
+  - Removed support for other compilers than DJGPP.
+  - Binary version compiled with DJGPP, GCC 12.2.0.
+
 - 1.6 (2006-02-22)
   - Support for the DJGPP compiler.
   - Binary version compiled with DJGPP.
