@@ -1,5 +1,4 @@
 INSTALL = install
-STRIP = strip
 ZIP = zip
 
 prefix = /usr/local/djgpp
@@ -47,7 +46,7 @@ dist:
 	rm -r $(NAME)
 
 binarydist: adplay.exe
-	$(STRIP) adplay.exe
+	upx adplay.exe
 	rm -rf $(BINARYNAME).zip $(BINARYNAME)
 	mkdir $(BINARYNAME)
 	cp $(BINARYDIST) $(BINARYNAME)
