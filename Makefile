@@ -46,7 +46,16 @@ dist:
 	rm -r $(NAME)
 
 binarydist: adplay.exe
-	upx adplay.exe
+	echo "Compressing adplay.exe"
+	@if which upx > /dev/null; then \
+		upx --best adplay.exe; \
+	elif which strip > /dev/null; then \
+		echo "WARNING: Using strip, since upx is not found. Please consider installing upx since it gives the best compression of the binary. Also see UPX manpage https://github.com/upx/upx/blob/250c656b9eb24b0fb54fe8c015d38b0eba5ee80c/doc/upx-doc.txt#L272C6-L272C6 for additional information on upx vs strip."; \
+		strip adplay.exe; \
+		echo "strip completed"; \
+	else \
+		echo "ERROR: strip not found, please install either upx or strip" && exit 1; \
+	fi
 	rm -rf $(BINARYNAME).zip $(BINARYNAME)
 	mkdir $(BINARYNAME)
 	cp $(BINARYDIST) $(BINARYNAME)
