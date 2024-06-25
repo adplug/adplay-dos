@@ -20,7 +20,7 @@ jobs:
           uses: actions/checkout@v4
           with:
             repository: 'adplug/adplug'
-            ref: 'db2cb13954adf124eed768ef62c8ba7d926f0d39' # Target specific commit, it contains patches for Adplug to provide DJGPP/Adplay DOS compatibility. TODO: Replace with new AdPlug tagged version when released
+            ref: 'master' # TODO: Replace with new AdPlug tagged version when released
             path: adplug
         - name: Checkout libbinio
           uses: actions/checkout@v4
