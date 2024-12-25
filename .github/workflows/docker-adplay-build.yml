@@ -99,8 +99,8 @@ jobs:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           run: |
             pushd adplay
-            git tag latest
-            git push origin latest
+            git tag -f latest
+            git push -f origin latest
             popd
 
         - name: Release latest development version
