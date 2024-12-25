@@ -103,12 +103,12 @@ jobs:
             git push -f origin latest
             popd
 
-        - name: Release latest development version
+        - name: Upload latest development version to 'latest' release
           env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             tag: latest
           run: |
-            gh release create "$tag" adplay/*.zip --repo="$GITHUB_REPOSITORY" --title="$tag" --generate-notes
+            gh release upload "$tag" adplay/*.zip --repo="$GITHUB_REPOSITORY" --clobber
 
         # - name: Upload artifact
         #   uses: actions/upload-artifact@v3
