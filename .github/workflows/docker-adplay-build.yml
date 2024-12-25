@@ -93,9 +93,22 @@ jobs:
             pushd adplay
             make gcc_version=${{ matrix.gcc_compiler }} binarydist
             popd
-        - name: Upload artifact
-          uses: actions/upload-artifact@v3
-          with:
-            name: adplay
-            path: |
-              adplay/*.zip
+
+        - name: Tag this version 'latest'
+          run: |
+            git tag latest
+            git push origin latest
+
+        - name: Release latest development version
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            tag: latest
+          run: |
+            gh release create "$tag" adplay/*.zip --repo="$GITHUB_REPOSITORY" --title="$tag" --generate-notes
+
+        # - name: Upload artifact
+        #   uses: actions/upload-artifact@v3
+        #   with:
+        #     name: adplay
+        #     path: |
+        #       adplay/*.zip
