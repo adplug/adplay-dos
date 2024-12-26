@@ -420,17 +420,18 @@ static void refresh_songinfo(CTxtWnd &w)
 {
   char tmpstr[80];
   unsigned int time = (unsigned int)time_ms;
+  unsigned char width = w.getsizex() - 1;
 
   w.erase();
-  sprintf(tmpstr,"Subsong : %d / %d",subsong+1,p->getsubsongs()); w.puts(tmpstr);
-  sprintf(tmpstr,"Position: %d / %d",p->getorder(),p->getorders()); w.puts(tmpstr);
-  sprintf(tmpstr,"Pattern : %d / %d",p->getpattern(),p->getpatterns()); w.puts(tmpstr);
-  sprintf(tmpstr,"Row     : %d",p->getrow()); w.puts(tmpstr);
-  sprintf(tmpstr,"Speed   : %d",p->getspeed()); w.puts(tmpstr);
-  sprintf(tmpstr,"Timer   : %.2f Hz",p->getrefresh()); w.puts(tmpstr);
-  sprintf(tmpstr,"Time    : %d:%2d.%2d",time/1000/60,time/1000%60,time/10%100); w.puts(tmpstr);
-  sprintf(tmpstr,"Total   : %lu:%2lu.%2lu",totaltime/1000/60,totaltime/1000%60,
-	  totaltime/10%100); w.puts(tmpstr);
+  snprintf(tmpstr,width,"Subsong : %d / %d\n",subsong+1,p->getsubsongs()); w.outtext(tmpstr);
+  snprintf(tmpstr,width,"Position: %d / %d\n",p->getorder(),p->getorders()); w.outtext(tmpstr);
+  snprintf(tmpstr,width,"Pattern : %d / %d\n",p->getpattern(),p->getpatterns()); w.outtext(tmpstr);
+  snprintf(tmpstr,width,"Row     : %d\n",p->getrow()); w.outtext(tmpstr);
+  snprintf(tmpstr,width,"Speed   : %d\n",p->getspeed()); w.outtext(tmpstr);
+  snprintf(tmpstr,width,"Timer   : %.2f Hz\n",p->getrefresh()); w.outtext(tmpstr);
+  snprintf(tmpstr,width,"Time    : %d:%2d.%2d\n",time/1000/60,time/1000%60,time/10%100); w.outtext(tmpstr);
+  snprintf(tmpstr,width,"Total   : %lu:%2lu.%2lu\n",totaltime/1000/60,totaltime/1000%60,
+	  totaltime/10%100); w.outtext(tmpstr);
   w.update();
 }
 
