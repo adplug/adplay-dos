@@ -18,23 +18,23 @@ jobs:
 
     steps:
         - name: Checkout AdPlug
-          uses: actions/checkout@v4
+          uses: actions/checkout@v7
           with:
             repository: 'adplug/adplug'
             ref: 'master' # TODO: Replace with new AdPlug tagged version when released
             path: adplug
         - name: Checkout libbinio
-          uses: actions/checkout@v4
+          uses: actions/checkout@v7
           with:
             repository: 'adplug/libbinio'
             path: libbinio
         - name: Checkout gcctimer
-          uses: actions/checkout@v4
+          uses: actions/checkout@v7
           with:
             repository: 'adplug/gcctimer'
             path: gcctimer
         - name: Checkout AdPlay for DOS (this repository)
-          uses: actions/checkout@v4
+          uses: actions/checkout@v7
           with:
             path: adplay
     
@@ -70,7 +70,7 @@ jobs:
             sudo env PATH="$PATH" make CC=gcc prefix=/usr/local/djgpp install
             popd
 
-        - name: make AdPlug
+        - name: Make AdPlug
           run: |
             ulimit -c unlimited -S
             pushd adplug
@@ -111,6 +111,7 @@ jobs:
             dosemu adplay.exe -dumb /q loudness.lds
 
         - name: Tag this version 'latest'
+          if: github.ref == 'refs/heads/master'
           env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           run: |
@@ -120,15 +121,17 @@ jobs:
             popd
 
         - name: Upload latest development version to 'latest' release
+          if: github.ref == 'refs/heads/master'
           env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             tag: latest
           run: |
             gh release upload "$tag" adplay/*.zip --repo="$GITHUB_REPOSITORY" --clobber
 
-        # - name: Upload artifact
-        #   uses: actions/upload-artifact@v3
-        #   with:
-        #     name: adplay
-        #     path: |
-        #       adplay/*.zip
+        - name: Upload artifact
+          if: contains(github.ref, 'refs/pull/')
+          uses: actions/upload-artifact@v7
+          with:
+            name: adplay
+            path: |
+              adplay/*.zip
